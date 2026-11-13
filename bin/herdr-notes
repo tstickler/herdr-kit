@@ -1,0 +1,11 @@
+#!/bin/sh
+# Prints this project's notes for one agent role: the nearest .claude/herdr/<role>.md above the
+# current folder. Prints nothing when the project has none. Usage: herdr-notes writer
+[ -n "${1:-}" ] || { echo "usage: herdr-notes <role>" >&2; exit 2; }
+d=$(pwd -P)
+while :; do
+  f="$d/.claude/herdr/$1.md"
+  [ -f "$f" ] && { echo "Project notes for $1 ($f):"; echo; cat "$f"; exit 0; }
+  [ "$d" = / ] && exit 0
+  d=$(dirname "$d")
+done
