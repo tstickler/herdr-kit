@@ -48,8 +48,9 @@ A missing file means generic behavior. Safety rules stay in the templates, so an
 still safe.
 
 Roles that read notes: `lead`, `epic`, `writer` (all four tiers), `reader` (both), `critique`, `design`,
-`research`, `spike`. Most projects only need `lead` and `epic`. `overlays/jira/` has starter notes for a Jira
-project.
+`research`, `spike`. Most projects only need `lead` (where tickets live and how their status moves, the repos,
+what can't run side by side) and `epic` (the ticket format and any extra steps). Notes belong to the project,
+never to this kit.
 
 To keep your notes out of a shared repo, put the folder above it. The lookup searches upward, so it covers the
 repo and every worktree beside it, and coworkers never see it:
@@ -67,7 +68,7 @@ repo and every worktree beside it, and coworkers never see it:
 1. Install Herdr and `jq`, and make sure `~/.local/bin` is on your PATH.
 2. `git clone https://github.com/tstickler/herdr-kit`
 3. Run `herdr-kit/install.sh`. It symlinks the templates, skills, commands and hook into place. A file already in the way is moved aside to `*.pre-herdr-kit`, never deleted.
-4. For a Jira project, copy the starter notes: `mkdir -p <parent>/.claude/herdr && cp herdr-kit/overlays/jira/*.md <parent>/.claude/herdr/`
+4. Write your project's notes: `mkdir -p <parent>/.claude/herdr`, then add `lead.md` and `epic.md` there.
 5. Check from your app folder: `herdr-notes lead | head -1` should name your notes file.
 6. Open a Herdr tab in the repo, run `claude`, then `/lead`.
 
@@ -82,7 +83,6 @@ commands/         /critique /design /research /spike → ~/.claude/commands/
 bin/herdr-notes                          → ~/.local/bin/
 hooks/            names each Herdr tab after the Claude session
 statusline.sh
-overlays/jira/    starter project notes for a Jira project
 install.sh
 ```
 
