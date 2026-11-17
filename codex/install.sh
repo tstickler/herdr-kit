@@ -25,10 +25,10 @@ link() {
 
 for f in "$K"/codex/templates/*.md; do link "$f" "$HOME/.config/herdr-core/templates/$(basename "$f")"; done
 
-# Writers run unsandboxed: Xcode's SPM resolution starts its own sandbox-exec, which macOS refuses
-# inside Codex's sandbox. Readers keep a sandbox, with network on (hc's socket needs it) and hc's
-# state folder writable.
-profile() { # <role> <model> <effort> <writer|reader>
+# Writers run unsandboxed (full): Xcode's SPM resolution starts its own sandbox-exec, which macOS
+# refuses inside Codex's sandbox. Read-only roles keep a sandbox, with network on (hc's socket needs
+# it) and hc's state folder writable.
+profile() { # <role> <model> <effort> <full|sandboxed>
   p="$home/herdr-$1.config.toml"
   if [ -f "$p" ] && ! grep -qF "$mark" "$p"; then mv "$p" "$p.pre-herdr-kit"; echo "moved aside: $p.pre-herdr-kit"; fi
   {
@@ -37,7 +37,7 @@ profile() { # <role> <model> <effort> <writer|reader>
     echo "model_reasoning_effort = \"$3\""
     echo 'approval_policy = "never"'
     echo 'project_doc_fallback_filenames = ["CLAUDE.md"]'
-    if [ "$4" = writer ]; then
+    if [ "$4" = full ]; then
       echo 'sandbox_mode = "danger-full-access"'
     else
       echo 'sandbox_mode = "workspace-write"'
@@ -52,9 +52,11 @@ profile() { # <role> <model> <effort> <writer|reader>
 }
 
 mkdir -p "$home"
-profile writer-low  gpt-6-luna    medium writer
-profile writer      gpt-6.1-terra medium writer
-profile writer-high gpt-6.1-sol   high   writer
-profile writer-deep gpt-6-astra   high   writer
-profile reader      gpt-6-astra   medium reader
-profile reader-deep gpt-6-astra   high   reader
+profile writer-low  gpt-6-luna    medium full
+profile writer      gpt-6.1-terra medium full
+profile writer-high gpt-6.1-sol   high   full
+profile writer-deep gpt-6-astra   high   full
+profile reader      gpt-6-astra   medium sandboxed
+profile reader-deep gpt-6-astra   high   sandboxed
+profile critique    gpt-6-astra   high   sandboxed
+profile design      gpt-6-astra   medium sandboxed
