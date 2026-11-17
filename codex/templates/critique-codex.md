@@ -1,6 +1,6 @@
 ---
 name: critique-codex
-description: Skeptical Codex Astra reviewer that attacks a plan before it is built, beside the Claude critic.
+description: Skeptical Codex Astra reviewer that critiques a plan before implementation.
 command: codex --no-daemon -p herdr-critique
 ---
 

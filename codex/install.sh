@@ -1,6 +1,6 @@
 #!/bin/sh
-# Adds the Codex workers when `codex` is on PATH; does nothing otherwise. Safe to re-run.
-# Links codex/templates/*.md into Herdr and writes one Codex profile per template into $CODEX_HOME.
+# Adds the Codex workers and skills when `codex` is on PATH; does nothing otherwise. Safe to re-run.
+# Links Herdr templates and Codex skills, and writes one Codex profile per worker template.
 # Machine-specific settings go in ~/.config/herdr-kit/local.env, never in this repo:
 #   CODEX_MODEL_PREFIX=global.openai.   prepended to every model id (e.g. for a proxy)
 set -eu
@@ -24,6 +24,7 @@ link() {
 }
 
 for f in "$K"/codex/templates/*.md; do link "$f" "$HOME/.config/herdr-core/templates/$(basename "$f")"; done
+for d in "$K"/codex/skills/*; do link "$d" "$HOME/.agents/skills/$(basename "$d")"; done
 
 # Writers run unsandboxed (full): Xcode's SPM resolution starts its own sandbox-exec, which macOS
 # refuses inside Codex's sandbox. Read-only roles keep a sandbox, with network on (hc's socket needs

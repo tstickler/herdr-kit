@@ -1,6 +1,6 @@
 ---
 name: reader-deep-codex
-description: Read-only Codex Astra high-effort reviewer for diffs from Claude's writer-deep.
+description: Read-only Codex Astra high-effort reviewer for deep tasks, including cross-module changes and changes to sensitive behavior.
 command: codex --no-daemon -p herdr-reader-deep
 ---
 
