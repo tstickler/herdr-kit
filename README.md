@@ -31,6 +31,39 @@ precisely enough for `writer-low`, it isn't a `writer-low` task.
 | `research` | Sonnet, medium | Answers a codebase question with path:line evidence, in the background. `/research`. |
 | `spike` | Sonnet, medium | Throwaway prototype in its own worktree. `/spike` runs one per approach. |
 
+## Codex workers (optional)
+
+On a machine with `codex` on PATH, `install.sh` adds a Codex twin for each writer and reader, and for the critic
+and designer. Without Codex they are skipped and nothing else changes.
+
+| Template | Codex model | Claude twin |
+|---|---|---|
+| `writer-low-codex` | Luna, medium | `writer-low` |
+| `writer-codex` | Terra, medium | `writer` |
+| `writer-high-codex` | Sol, high | `writer-high` |
+| `writer-deep-codex` | Astra, high | `writer-deep` |
+| `reader-codex` | Astra, medium | `reader` |
+| `reader-deep-codex` | Astra, high | `reader-deep` |
+| `critique-codex` | Astra, high | `critique` |
+| `design-codex` | Astra, medium | `design` |
+
+The bodies match their twins; only the launch differs. Each template runs `codex --no-daemon -p herdr-<role>`,
+and the install writes those profiles to `~/.codex/herdr-<role>.config.toml` with the model, effort, sandbox,
+and `CLAUDE.md` as a fallback for `AGENTS.md`. `/lead` stays a Claude session. It uses Claude writers by default
+and, when both families are installed, sends each diff to the other family's reader. `/critique` then runs
+both critics side by side, and `/design` has one of its three designers on Codex.
+
+Sandboxes: Codex readers, the critic and the designer run sandboxed with network on (`hc send` needs its
+socket). Codex writers run with no sandbox, because Xcode's package resolution starts its own `sandbox-exec`,
+which macOS refuses inside Codex's. Their template rules are what hold them, as with the Claude writers.
+
+Machine-specific settings go in `~/.config/herdr-kit/local.env`, never in this repo. For example, when Codex goes
+through a proxy that prefixes model ids:
+
+```sh
+CODEX_MODEL_PREFIX=global.openai.
+```
+
 ## From ticket to merge
 
 1. **`/epic`** writes the spec, then a plan that `/critique` attacks. It cuts the plan into tasks with one repo, one writer and an exact file list each. Every task gets a `worker:` line.
@@ -78,6 +111,7 @@ To update, run `git pull` in `herdr-kit`. The links pick up the change.
 
 ```
 templates/        the 10 agents          → ~/.config/herdr-core/templates/
+codex/            Codex twins + their profiles, only when codex is installed
 skills/           /lead, /epic           → ~/.claude/skills/
 commands/         /critique /design /research /spike → ~/.claude/commands/
 bin/herdr-notes                          → ~/.local/bin/

@@ -60,6 +60,9 @@ Pick by risk first and size second; when they disagree, risk wins.
 Sensitive by default: money and purchases, auth and account merges, migrations that change data, public or
 shipped API contracts, anything that can lose user data. The notes may add to this list.
 
+If `hc templates` lists `-codex` templates, each tier has a Codex twin (`writer-codex` and so on). Use the
+Claude writer unless the user asks for Codex on a task; then the `worker:` line names the `-codex` template.
+
 Every task is the worker's whole brief, in this shape unless the notes give another:
 
 ```markdown
