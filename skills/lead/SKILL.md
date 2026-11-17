@@ -29,6 +29,14 @@ Sensitive by default: money and purchases, auth and account merges, migrations t
 
 Reviewers: `reader-deep` (Fable, high) reviews `writer-deep` diffs; `reader` (Fable, medium) reviews the rest.
 
+### Codex workers
+
+If `hc templates` lists `-codex` templates, each tier also has a Codex twin: `writer-low-codex` (Luna, medium), `writer-codex` (Terra, medium), `writer-high-codex` (Sol, high), `writer-deep-codex` (Astra, high), `reader-codex` (Astra, medium), `reader-deep-codex` (Astra, high). Same rules and briefs; pick the tier the same way. Use Claude writers unless the ticket or the user names a Codex one.
+
+When both families are installed, review across them: a Claude writer's diff goes to `reader-codex` or `reader-deep-codex`, a Codex writer's to `reader` or `reader-deep`. When only one family is installed, review within it.
+
+Codex writers run without a sandbox (Xcode builds fail inside it), so only their template rules hold them, same as Claude writers.
+
 A brief for `writer-low` must name the exact files, the exact change and the exact command that proves it. If you can't write it that precisely, it isn't a `writer-low` task.
 
 ## Starting workers
@@ -43,7 +51,7 @@ A brief for `writer-low` must name the exact files, the exact change and the exa
   - Gitignored dependency folders are not in a new worktree: symlink them from the repo (`ln -s <repo>/node_modules <worktree>/node_modules`).
   - Never copy `.env` files or other secrets into a worktree. Anything that needs them goes through you and the user.
 - After a launch, check `first_message.sent`. If it is false, `hc read <task>` before you send anything.
-- A worker can open on Claude Code's "trust this folder" prompt. After a launch, `hc read <task>`: only if the screen is actually on the prompt, tell the user which terminal is waiting; never answer it yourself. Once the user has accepted it, the template's rules were never delivered, so send them with the brief: `awk 'f>=2{print} /^---$/{f++}' ~/.config/herdr-core/templates/<template>.md` followed by the brief, in one `hc send <task> "$(cat <file>)"`.
+- A worker can open on a "trust this folder" prompt (Claude Code's or Codex's). After a launch, `hc read <task>`: only if the screen is actually on the prompt, tell the user which terminal is waiting; never answer it yourself. Once the user has accepted it, the template's rules were never delivered, so send them with the brief: `awk 'f>=2{print} /^---$/{f++}' ~/.config/herdr-core/templates/<template>.md` followed by the brief, in one `hc send <task> "$(cat <file>)"`.
 
 ## Waiting and results
 

@@ -42,4 +42,7 @@ mkdir -p "$(dirname "$h")"
 jq -s '.[0] * .[1]' "$K/herdr-settings.json" "$h" > "$h.tmp" && mv "$h.tmp" "$h"
 echo "ok: $h"
 
+# Codex workers, only on machines with codex installed.
+"$K/codex/install.sh"
+
 echo "Done. Project notes go in <project>/.claude/herdr/<role>.md; see README.md."
