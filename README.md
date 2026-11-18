@@ -87,7 +87,14 @@ Epic writes `level: low|medium|high|deep` on new tasks. Lead uses the level to p
 template and uses the deep reviewer for deep tasks. Legacy `worker:` labels, including `-codex`
 labels, supply the task level. The Lead invocation supplies the provider.
 
-Plan critique uses `/critique` in Claude Code and the existing `critique-codex` template in Codex.
+Plan critique uses `/critique` in Claude Code and the `critique-codex` template directly in Codex Epic.
+
+## Helper commands
+
+Claude Code's `/critique`, `/design`, `/research`, and `/spike` load their instructions from
+`shared/commands/` through the installed `~/.config/herdr-kit/commands` link. The entry points supply
+the arguments and choose the worker templates. Other agent harnesses can supply their own entry
+points to the same commands. Lead and Epic live in `shared/workflows/` and coordinate multiple stages.
 
 ## From ticket to merge
 
@@ -130,15 +137,15 @@ repo and every worktree beside it, and coworkers never see it:
 5. Check from your app folder: `herdr-notes lead | head -1` should name your notes file.
 6. Open a Herdr tab in the repo, run `claude`, then `/lead`.
 
-To update, run `git pull` in `herdr-kit`. If you installed the kit before the `claude/` and `shared/`
-layout, rerun `./install.sh` once to relink the moved files.
+To update, run `git pull` in `herdr-kit`. If you installed the kit before helper commands moved to
+`shared/commands/`, rerun `./install.sh` once to update the installed links.
 
 ## What's in here
 
 ```
 claude/
   skills/             Lead and Epic entry points → ~/.claude/skills/
-  commands/           critique, design, research, spike → ~/.claude/commands/
+  commands/           Helper slash command entry points → ~/.claude/commands/
   templates/          Claude workers → ~/.config/herdr-core/templates/
   hooks/              Claude session tab naming
 codex/
@@ -146,6 +153,7 @@ codex/
   templates/          Codex workers → ~/.config/herdr-core/templates/
   install.sh          Codex skills, templates, and worker profiles
 shared/
+  commands/           Critique, Design, Research, and Spike instructions → ~/.config/herdr-kit/commands/
   workflows/          Lead and Epic instructions and task levels
   bin/herdr-notes     Project notes lookup → ~/.local/bin/
   herdr-settings.json Herdr app defaults
