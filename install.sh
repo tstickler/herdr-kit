@@ -16,8 +16,8 @@ link() {
 
 for f in "$K"/templates/*.md; do link "$f" "$HOME/.config/herdr-core/templates/$(basename "$f")"; done
 for f in "$K"/commands/*.md; do link "$f" "$HOME/.claude/commands/$(basename "$f")"; done
-link "$K/skills/lead" "$HOME/.claude/skills/lead"
-link "$K/skills/epic" "$HOME/.claude/skills/epic"
+link "$K/claude/skills/lead" "$HOME/.claude/skills/lead"
+link "$K/claude/skills/epic" "$HOME/.claude/skills/epic"
 link "$K/hooks/herdr-tab-name.sh" "$HOME/.claude/hooks/herdr-tab-name.sh"
 link "$K/statusline.sh" "$HOME/.claude/statusline.sh"
 link "$K/bin/herdr-notes" "$HOME/.local/bin/herdr-notes"

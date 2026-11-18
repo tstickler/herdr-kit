@@ -128,14 +128,15 @@ repo and every worktree beside it, and coworkers never see it:
 5. Check from your app folder: `herdr-notes lead | head -1` should name your notes file.
 6. Open a Herdr tab in the repo, run `claude`, then `/lead`.
 
-To update, run `git pull` in `herdr-kit`. The links pick up the change.
+To update, run `git pull` in `herdr-kit`. If your Claude skills were installed from the old root
+`skills/` directory, rerun `./install.sh` once to relink them.
 
 ## What's in here
 
 ```
 templates/        the 10 agents          → ~/.config/herdr-core/templates/
 codex/            Codex templates, profiles, and skill entry points
-skills/           /lead, /epic           → ~/.claude/skills/
+claude/skills/    /lead, /epic           → ~/.claude/skills/
 workflows/        shared Lead and Epic instructions and task levels
 commands/         /critique /design /research /spike → ~/.claude/commands/
 bin/herdr-notes                          → ~/.local/bin/
