@@ -23,8 +23,32 @@ link() {
   ln -s "$1" "$2"; echo "linked: $2"
 }
 
+backup_skill() {
+  backup_root="$HOME/.config/herdr-kit/skill-backups"
+  mkdir -p "$backup_root"
+  backup_dir=$(mktemp -d "$backup_root/$(basename "$1").XXXXXX")
+  mv "$1" "$backup_dir/"
+  echo "moved aside: $backup_dir/$(basename "$1")"
+}
+
+link_skill() {
+  skill="$HOME/.agents/skills/$(basename "$1")"
+  # Earlier installs kept this backup next to the active skill.
+  if [ -e "$skill.pre-herdr-kit" ] || [ -L "$skill.pre-herdr-kit" ]; then
+    backup_skill "$skill.pre-herdr-kit"
+  fi
+  if [ -L "$skill" ] && [ "$(readlink "$skill")" = "$1" ]; then
+    echo "ok: $skill"
+    return
+  fi
+  if [ -e "$skill" ] || [ -L "$skill" ]; then
+    backup_skill "$skill"
+  fi
+  link "$1" "$skill"
+}
+
 for f in "$K"/codex/templates/*.md; do link "$f" "$HOME/.config/herdr-core/templates/$(basename "$f")"; done
-for d in "$K"/codex/skills/*; do link "$d" "$HOME/.agents/skills/$(basename "$d")"; done
+for d in "$K"/codex/skills/*; do link_skill "$d"; done
 
 # Writers run unsandboxed (full): Xcode's SPM resolution starts its own sandbox-exec, which macOS
 # refuses inside Codex's sandbox. Read-only roles keep a sandbox, with network on (hc's socket needs

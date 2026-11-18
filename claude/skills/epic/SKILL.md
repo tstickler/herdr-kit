@@ -10,4 +10,5 @@ disable-model-invocation: true
 Read and follow `references/epic.md`, relative to this skill file. Use `/lead` in the handoff.
 
 For plan critique, follow the installed `~/.claude/commands/critique.md` with the absolute plan path
-as its argument. If critique cannot run, surface the blocker before creating tasks.
+as its argument and the feature slug as context. If critique cannot run, surface the blocker before
+creating tasks.

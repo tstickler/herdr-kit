@@ -7,10 +7,17 @@ Get an independent critique of a plan.
 If `hc` is not on the PATH, or `$HC_TERMINAL_ID` is empty, say this needs to run inside Herdr and stop.
 
 1. Plan: $ARGUMENTS. If blank, use the most recently modified plan in `docs/plans/`, and ask if there is none. Read it yourself so you can judge the critique.
-2. Write the brief to a file: the plan's path, and the output path `<plan dir>/critique.md`. Nothing else: not your opinion of the plan or the conversation that produced it.
-3. `hc run --bg --name critic --cwd <repo> critique "$(cat <brief file>)"`. If `first_message.sent` is false, `hc read critic` before sending anything.
-   If `hc templates` lists `critique-codex`, also start a second critic from another model family: the same brief with the output path `<plan dir>/critique-codex.md`, run as `hc run --bg --name critic-codex --cwd <repo> critique-codex "$(cat <second brief file>)"`.
-4. `hc wait --children all`. Never sleep or poll.
+2. Use the calling Epic's slug, or derive a short kebab-case slug from the plan title. Name the critics
+   `<slug>-critic-claude` and `<slug>-critic-codex`. Keep the prefix at 18 characters or fewer. If a name
+   is already in use or its report already exists, add a run number before `-critic-` and shorten the
+   slug as needed. Give each critic a brief file containing only the absolute plan path and its own
+   output path, `<plan dir>/<critic-name>.md`.
+3. Launch `hc run --json --bg --name <claude-name> --cwd <repo> critique "$(cat <claude brief file>)"`.
+   If `hc templates` lists `critique-codex`, also launch
+   `hc run --json --bg --name <codex-name> --cwd <repo> critique-codex "$(cat <codex brief file>)"`. Start both
+   before waiting. Record the terminal ID from each successful launch and use it in later commands.
+   If `first_message.sent` is false, inspect that terminal with `hc read` before sending anything.
+4. Wait for each of those terminals with `hc wait <terminal-id>` until it reports. Never sleep or poll.
 5. Check each finding against the code yourself. Drop false positives and say why. With two critics, merge duplicates and mark the issues both found.
 6. Report: confirmed issues, most severe first (with two critics, say which found each); what you would change in the plan; what you dismissed. Ask before editing the plan.
-7. `hc kill` and `hc rm` each critic you started.
+7. Run `hc kill <terminal-id>` and `hc rm <terminal-id>` for each critic you started.

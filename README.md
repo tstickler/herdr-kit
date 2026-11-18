@@ -64,8 +64,10 @@ CODEX_MODEL_PREFIX=global.openai.
 
 ## Lead and Epic in either harness
 
-If this kit is already installed, run `./codex/install.sh` from this checkout to add the two
-Codex skills. Otherwise run `./install.sh` for the initial setup, including the shared `herdr-notes` helper.
+Run `./install.sh` for a first install or an upgrade from the layout with root-level `skills/` and
+`bin/`. It updates the moved links, including the shared `herdr-notes` helper. If the kit is already
+installed with the `claude/` and `shared/` layout, use `./codex/install.sh` to add or refresh Codex support.
+Displaced Codex skills are backed up under `~/.config/herdr-kit/skill-backups/`.
 Run `codex login` if needed and choose **Sign in with ChatGPT** to use your subscription.
 
 From a Herdr tab in your project, open Claude Code and use `/lead` or `/epic`. In a normal Codex
@@ -123,7 +125,7 @@ repo and every worktree beside it, and coworkers never see it:
 
 1. Install Herdr and `jq`, and make sure `~/.local/bin` is on your PATH.
 2. `git clone https://github.com/tstickler/herdr-kit`
-3. Run `herdr-kit/install.sh`. It symlinks the templates, skills, commands and hook into place. A file already in the way is moved aside to `*.pre-herdr-kit`, never deleted.
+3. Run `herdr-kit/install.sh`. It symlinks the templates, skills, commands and hook into place and moves conflicting files aside.
 4. Write your project's notes: `mkdir -p <parent>/.claude/herdr`, then add `lead.md` and `epic.md` there.
 5. Check from your app folder: `herdr-notes lead | head -1` should name your notes file.
 6. Open a Herdr tab in the repo, run `claude`, then `/lead`.
