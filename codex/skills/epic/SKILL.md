@@ -14,9 +14,10 @@ user to resume inside Herdr before continuing with the review.
 
 1. Check that `hc templates` lists `critique-codex`. If it is missing, report the blocker. Name the
    terminal `<slug>-critic-codex` using the feature slug. Keep the prefix at 18 characters or fewer.
-   If the name is in use or its report already exists, add a run number before `-critic-` and shorten
-   the slug as needed. Write a brief with the absolute plan path and the output path
-   `<plan dir>/<critic-name>.md`.
+   If the name is in use, add a run number before `-critic-` and shorten the slug as needed. Create a
+   fresh directory with `mktemp -d /tmp/herdr-critique.XXXXXX`. Write a brief with the absolute plan
+   path and the absolute report path `<temporary directory>/<critic-name>.md`. Keep the report path
+   to read after the critic replies.
 2. Launch `hc run --json --bg --name <critic-name> --cwd <repo> critique-codex "$(cat <brief file>)"`.
    Record the terminal ID from the successful launch. If `first_message.sent` is false, inspect
    `hc read <terminal-id>`. If Codex is waiting for workspace

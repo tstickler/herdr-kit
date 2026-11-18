@@ -133,10 +133,6 @@ repo and every worktree beside it, and coworkers never see it:
 To update, run `git pull` in `herdr-kit`. If you installed the kit before the `claude/` and `shared/`
 layout, rerun `./install.sh` once to relink the moved files.
 
-Status lines are configured locally in `~/.claude/settings.json` and `~/.codex/config.toml`. If your
-Claude status-line script is symlinked into an older kit checkout, copy it to a local file and point
-`statusLine` at that file before upgrading.
-
 ## What's in here
 
 ```

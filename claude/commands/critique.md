@@ -9,9 +9,11 @@ If `hc` is not on the PATH, or `$HC_TERMINAL_ID` is empty, say this needs to run
 1. Plan: $ARGUMENTS. If blank, use the most recently modified plan in `docs/plans/`, and ask if there is none. Read it yourself so you can judge the critique.
 2. Use the calling Epic's slug, or derive a short kebab-case slug from the plan title. Name the critics
    `<slug>-critic-claude` and `<slug>-critic-codex`. Keep the prefix at 18 characters or fewer. If a name
-   is already in use or its report already exists, add a run number before `-critic-` and shorten the
-   slug as needed. Give each critic a brief file containing only the absolute plan path and its own
-   output path, `<plan dir>/<critic-name>.md`.
+   is already in use or the Claude report already exists, add a run number before `-critic-` and shorten
+   the slug as needed. Give each critic a brief file containing only the absolute plan and report
+   paths. Use `<plan dir>/<claude-name>.md` for Claude. If launching Codex, create a fresh directory
+   with `mktemp -d /tmp/herdr-critique.XXXXXX` and use `<temporary directory>/<codex-name>.md`.
+   Keep both report paths to read after the critics reply.
 3. Launch `hc run --json --bg --name <claude-name> --cwd <repo> critique "$(cat <claude brief file>)"`.
    If `hc templates` lists `critique-codex`, also launch
    `hc run --json --bg --name <codex-name> --cwd <repo> critique-codex "$(cat <codex brief file>)"`. Start both
