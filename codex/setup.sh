@@ -12,32 +12,27 @@ setup_codex() (
   mark="# Written by herdr-kit. Edits are overwritten; change the kit or local.env."
   legacy_mark="# Written by herdr-kit codex/install.sh. Edits are overwritten; change the kit or local.env."
 
-  backup_skill() {
-    backup_root="$HOME/.config/herdr-kit/skill-backups"
-    mkdir -p "$backup_root"
-    backup_dir=$(mktemp -d "$backup_root/$(basename "$1").XXXXXX")
-    mv "$1" "$backup_dir/"
-    echo "moved aside: $backup_dir/$(basename "$1")"
-  }
-
-  link_skill() {
-    skill="$HOME/.agents/skills/$(basename "$1")"
-    # Earlier installs kept this backup next to the active skill.
-    if [ -e "$skill.pre-herdr-kit" ] || [ -L "$skill.pre-herdr-kit" ]; then
-      backup_skill "$skill.pre-herdr-kit"
+  mkdir -p "$home"
+  "$K/codex/scope-skills.sh" "$K"/codex/skills/*/SKILL.md
+  link "$K/codex/skills" "$HOME/.config/herdr-kit/codex-skills"
+  link "$K/codex/bin/herdr-codex" "$HOME/.local/bin/herdr-codex"
+  for d in "$K"/codex/skills/*; do
+    name=$(basename "$d")
+    old="$HOME/.agents/skills/$name"
+    skill="$home/skills/herdr-kit-$name"
+    # Keep the kit in Codex's own skill directory.
+    if { [ -e "$skill" ] || [ -L "$skill" ]; } &&
+        { [ ! -L "$skill" ] || [ "$(readlink "$skill")" != "$d" ]; }; then
+      echo "A file already occupies the skill link at $skill." >&2
+      exit 1
     fi
-    if [ -L "$skill" ] && [ "$(readlink "$skill")" = "$1" ]; then
-      echo "ok: $skill"
-      return
+    link "$d" "$skill"
+    if [ -L "$old" ] && [ "$(readlink "$old")" = "$d" ]; then
+      unlink "$old"
+      echo "unlinked: $old"
     fi
-    if [ -e "$skill" ] || [ -L "$skill" ]; then
-      backup_skill "$skill"
-    fi
-    link "$1" "$skill"
-  }
-
+  done
   for f in "$K"/codex/templates/*.md; do link "$f" "$HOME/.config/herdr-core/templates/$(basename "$f")"; done
-  for d in "$K"/codex/skills/*; do link_skill "$d"; done
 
   # Writers and spikes run unsandboxed (full): Xcode's SPM resolution starts its own sandbox-exec, which macOS
   # refuses inside Codex's sandbox. Read-only roles keep a sandbox, with network on (hc's socket needs
@@ -68,7 +63,6 @@ setup_codex() (
     echo "wrote: $p"
   }
 
-  mkdir -p "$home"
   profile writer-low  gpt-6-luna    medium full
   profile writer      gpt-6.1-terra medium full
   profile writer-high gpt-6.1-sol   high   full
@@ -79,4 +73,6 @@ setup_codex() (
   profile design      gpt-6-astra   medium sandboxed
   profile research    gpt-6-astra   medium sandboxed
   profile spike       gpt-6.1-terra medium full
+
+  register_launcher codex
 )

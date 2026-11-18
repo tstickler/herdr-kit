@@ -1,9 +1,22 @@
 # Internal Claude setup, sourced by the top-level installer.
 setup_claude() (
   for f in "$K"/claude/templates/*.md; do link "$f" "$HOME/.config/herdr-core/templates/$(basename "$f")"; done
-  for f in "$K"/claude/commands/*.md; do link "$f" "$HOME/.claude/commands/$(basename "$f")"; done
-  link "$K/claude/skills/lead" "$HOME/.claude/skills/lead"
-  link "$K/claude/skills/epic" "$HOME/.claude/skills/epic"
+
+  claude_entries="$HOME/.config/herdr-kit/claude-entrypoints"
+  link "$K/claude/commands" "$claude_entries/.claude/commands"
+  link "$K/claude/skills" "$claude_entries/.claude/skills"
+  link "$K/claude/bin/herdr-claude" "$HOME/.local/bin/herdr-claude"
+
+  # Migrate only links created by this checkout's earlier installers.
+  for f in "$K"/claude/commands/*.md "$K"/claude/skills/*; do
+    relative=${f#"$K/claude/"}
+    old="$HOME/.claude/$relative"
+    if [ -L "$old" ]; then
+      case $(readlink "$old") in
+        "$f"|"$K/$relative") unlink "$old"; echo "unlinked: $old" ;;
+      esac
+    fi
+  done
   link "$K/claude/hooks/herdr-tab-name.sh" "$HOME/.claude/hooks/herdr-tab-name.sh"
 
   s="$HOME/.claude/settings.json"
@@ -17,4 +30,6 @@ setup_claude() (
     mv "$s.tmp" "$s"
     echo "ok: hooks added to $s (backup: $s.pre-herdr-kit)"
   fi
+
+  register_launcher claude
 )

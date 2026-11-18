@@ -1,0 +1,62 @@
+#!/bin/sh
+set -eu
+
+case ${1:-} in
+  agents|attach|auth|auto-mode|doctor|gateway|import|install|logs|mcp|plugin|plugins|\
+  purge|respawn|rm|setup-token|stop|kill|update|upgrade|help|-h|--help|-v|--version)
+    exec claude "$@"
+    ;;
+esac
+
+if [ -n "${HC_TERMINAL_ID:-}" ]; then
+  entries="$HOME/.config/herdr-kit/claude-entrypoints"
+  if [ ! -d "$entries/.claude" ]; then
+    echo 'Herdr Claude entry points are missing. Rerun herdr-kit/install.sh.' >&2
+    exit 1
+  fi
+
+  # Run ahead of a plain interactive launch so CLI subcommands and scripts pass through.
+  if [ "$#" -eq 0 ] && [ -t 0 ] && [ -t 1 ]; then
+    entries_path=$(cd "$entries" && pwd -P)
+    claude_state="${CLAUDE_CONFIG_DIR:-$HOME}/.claude.json"
+    legacy_state="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/.config.json"
+    if [ -f "$legacy_state" ] && [ -s "$legacy_state" ]; then
+      claude_state="$legacy_state"
+    fi
+    repo_root=$(git -C "$entries_path" rev-parse --show-toplevel 2>/dev/null || :)
+    trusts_entries() {
+      jq -e --arg path "$entries_path" --arg root "$repo_root" '
+        any((.projects // {}) | to_entries[];
+          .key as $trusted
+          | .value.hasTrustDialogAccepted == true
+            and ($root == "" or $trusted == $root or ($trusted | startswith($root + "/")))
+            and ($path == $trusted or ($path | startswith(($trusted | rtrimstr("/")) + "/"))))
+      ' "$claude_state" >/dev/null 2>&1
+    }
+    if ! trusts_entries; then
+      echo 'Claude is opening the kit directory for one-time trust setup.'
+      echo 'Choose Yes, I trust this folder, then exit Claude to open your project.'
+      (cd "$entries_path" && claude) || :
+      if ! trusts_entries; then
+        echo 'Opening your project without the kit commands for this session.'
+        exec claude "$@"
+      fi
+    fi
+  fi
+
+  # Place the option before an explicit delimiter, or after the user's arguments.
+  scoped=false
+  for arg do
+    shift
+    if [ "$arg" = -- ] && [ "$scoped" = false ]; then
+      set -- "$@" --add-dir "$entries"
+      scoped=true
+    fi
+    set -- "$@" "$arg"
+  done
+  if [ "$scoped" = false ]; then
+    set -- "$@" --add-dir "$entries"
+  fi
+fi
+
+exec claude "$@"

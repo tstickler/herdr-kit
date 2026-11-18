@@ -26,9 +26,50 @@ mkdir -p "$(dirname "$h")"
 jq -s '.[0] * .[1]' "$K/shared/herdr-settings.json" "$h" > "$h.tmp" && mv "$h.tmp" "$h"
 echo "ok: $h"
 
+# Keep the usual agent names in Herdr's app menu and honor customized launches.
+register_launcher() {
+  command -v "$1" >/dev/null 2>&1 || return 0
+  programs="$HOME/.config/herdr-app/programs.json"
+  [ -f "$programs" ] || echo '{}' > "$programs"
+  jq --arg harness "$1" --arg launcher "$HOME/.local/bin/herdr-$1" '
+    .programs[$harness].run //= [$launcher]
+  ' "$programs" > "$programs.tmp"
+  mv "$programs.tmp" "$programs"
+}
+
 . "$K/claude/setup.sh"
 . "$K/codex/setup.sh"
 setup_claude
 setup_codex
+
+# Use the same names when typing into Herdr's interactive shells.
+link "$K/shell-launchers.sh" "$HOME/.config/herdr-kit/shell-launchers.sh"
+configure_shell() {
+  if [ -f "$1" ] && grep -qF '# Herdr Kit launchers' "$1"; then return; fi
+  mkdir -p "$(dirname "$1")"
+  cat >> "$1" <<'EOF'
+
+# Herdr Kit launchers
+if [ -n "${BASH_VERSION:-}${ZSH_VERSION:-}" ] && [ -n "${HC_TERMINAL_ID:-}" ] &&
+    [ -r "$HOME/.config/herdr-kit/shell-launchers.sh" ]; then
+  . "$HOME/.config/herdr-kit/shell-launchers.sh"
+fi
+EOF
+  echo "ok: $1"
+}
+login_shell=${SHELL:-}
+case ${login_shell##*/} in
+  zsh) configure_shell "${ZDOTDIR:-$HOME}/.zshrc" ;;
+  bash)
+    configure_shell "$HOME/.bashrc"
+    login_profile="$HOME/.bash_profile"
+    if [ ! -e "$login_profile" ]; then
+      if [ -e "$HOME/.bash_login" ]; then login_profile="$HOME/.bash_login"
+      elif [ -e "$HOME/.profile" ]; then login_profile="$HOME/.profile"
+      fi
+    fi
+    configure_shell "$login_profile"
+    ;;
+esac
 
 echo "Done. Project notes go in <project>/.claude/herdr/<role>.md; see README.md."
