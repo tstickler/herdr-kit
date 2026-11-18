@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+if [ -n "${HC_TERMINAL_ID:-}" ]; then
+  entries="$HOME/.config/herdr-kit/claude-entrypoints"
+  if [ ! -d "$entries/.claude" ]; then
+    echo 'Herdr Claude entry points are missing. Rerun herdr-kit/install.sh.' >&2
+    exit 1
+  fi
+  # Place the option before an explicit delimiter, or after the user's arguments.
+  scoped=false
+  for arg do
+    shift
+    if [ "$arg" = -- ] && [ "$scoped" = false ]; then
+      set -- "$@" --add-dir "$entries"
+      scoped=true
+    fi
+    set -- "$@" "$arg"
+  done
+  if [ "$scoped" = false ]; then
+    set -- "$@" --add-dir "$entries"
+  fi
+fi
+
+exec claude "$@"

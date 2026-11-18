@@ -71,9 +71,9 @@ are installed, `./codex/install.sh` can add or refresh Codex support.
 Displaced Codex skills are backed up under `~/.config/herdr-kit/skill-backups/`.
 Run `codex login` if needed and choose **Sign in with ChatGPT** to use your subscription.
 
-From a Herdr tab in your project, open Claude Code and use `/lead` or `/epic`. In a normal Codex
-session, use `$lead` or `$epic`. Both harnesses load the same workflows from `shared/workflows/` and use
-your current session's model, reasoning effort, and permissions. Workers use their own templates.
+From a Herdr tab in your project, start `herdr-claude` for `/lead` and `/epic`, or `herdr-codex` for
+`$lead` and `$epic`. Both harnesses load the same workflows from `shared/workflows/` and use your
+current session's model, reasoning effort, and permissions. Workers use their own templates.
 
 Lead defaults to Claude writing and Codex reviewing. Set `writer=` and `reader=` independently
 for a run. A missing template or exhausted quota prompts you to choose another provider.
@@ -94,9 +94,15 @@ another harness to continue from the same plan. Lead's `writer=` and `reader=` c
 
 ## Helper commands
 
-Use `/critique`, `/design`, `/research`, and `/spike` in Claude Code, or `$critique`, `$design`,
-`$research`, and `$spike` in Codex. They use the same instructions from `shared/commands/`. Append
-`harness=claude`, `harness=codex`, or `harness=claude,codex` to select the worker harnesses.
+Start Claude or Codex with the Herdr launcher for the kit commands to appear in that session.
+The launchers check `HC_TERMINAL_ID`. In Herdr, `herdr-claude` adds the kit's entry-point directory
+and `herdr-codex` enables the kit skills by path for that launch. Ordinary agent launches use their
+usual command and skill lists. The install migrates older global kit links and preserves personal
+commands and skills.
+
+Use `/critique`, `/design`, `/research`, and `/spike` in `herdr-claude`, or `$critique`, `$design`,
+`$research`, and `$spike` in `herdr-codex`. They use the same instructions from `shared/commands/`.
+Append `harness=claude`, `harness=codex`, or `harness=claude,codex` to select the worker harnesses.
 
 | Command | Default | When both harnesses are selected |
 |---|---|---|
@@ -147,24 +153,27 @@ repo and every worktree beside it, and coworkers never see it:
 
 1. Install Herdr and `jq`, and make sure `~/.local/bin` is on your PATH.
 2. `git clone https://github.com/tstickler/herdr-kit`
-3. Run `herdr-kit/install.sh`. It symlinks the templates, skills, commands and hook into place and moves conflicting files aside.
+3. Run `herdr-kit/install.sh`. It installs the templates, launchers, and session-scoped entry points.
 4. Write your project's notes: `mkdir -p <parent>/.claude/herdr`, then add `lead.md` and `epic.md` there.
 5. Check from your app folder: `herdr-notes lead | head -1` should name your notes file.
-6. Open a Herdr tab in the repo, run `claude`, then `/lead`.
+6. Open a Herdr tab in the repo, run `herdr-claude`, then `/lead`.
 
-To update, run `git pull` in `herdr-kit`. Rerun `./install.sh` once to install the shared command and
-worker resolver links and the new Codex profiles.
+To update, run `git pull` in `herdr-kit`. Rerun `./install.sh` once to migrate the old global links,
+install the launchers and worker resolver, and update the Codex profiles. Start a new agent session
+to pick up the scoped command list.
 
 ## What's in here
 
 ```
 claude/
-  skills/             Lead and Epic entry points → ~/.claude/skills/
-  commands/           Helper slash command entry points → ~/.claude/commands/
+  bin/herdr-claude    Claude session launcher → ~/.local/bin/
+  skills/             Lead and Epic entry points loaded by the launcher
+  commands/           Helper slash commands loaded by the launcher
   templates/          Claude workers → ~/.config/herdr-core/templates/
   hooks/              Claude session tab naming
 codex/
-  skills/             Lead, Epic, and helper entry points → ~/.agents/skills/
+  bin/herdr-codex     Codex session launcher → ~/.local/bin/
+  skills/             Lead, Epic, and helper entry points enabled by the launcher
   templates/          Codex workers → ~/.config/herdr-core/templates/
   install.sh          Codex skills, templates, and worker profiles
 shared/

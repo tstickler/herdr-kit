@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+if [ -n "${HC_TERMINAL_ID:-}" ]; then
+  entries=$(cd "$HOME/.config/herdr-kit/codex-skills" && pwd -P) || {
+    echo 'Herdr Codex entry points are missing. Rerun herdr-kit/install.sh.' >&2
+    exit 1
+  }
+  rules=$(printf '%s\0' "$entries"/*/SKILL.md | jq -Rrs '
+    split("\u0000") | map(select(length > 0) | "{path=\(. | @json),enabled=true}")
+    | "[" + join(",") + "]"
+  ')
+  exec codex -c "skills.config=$rules" "$@"
+fi
+
+exec codex "$@"

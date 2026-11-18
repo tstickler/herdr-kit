@@ -17,9 +17,21 @@ link() {
 for f in "$K"/claude/templates/*.md; do link "$f" "$HOME/.config/herdr-core/templates/$(basename "$f")"; done
 link "$K/shared/commands" "$HOME/.config/herdr-kit/commands"
 link "$K/harnesses.json" "$HOME/.config/herdr-kit/harnesses.json"
-for f in "$K"/claude/commands/*.md; do link "$f" "$HOME/.claude/commands/$(basename "$f")"; done
-link "$K/claude/skills/lead" "$HOME/.claude/skills/lead"
-link "$K/claude/skills/epic" "$HOME/.claude/skills/epic"
+claude_entries="$HOME/.config/herdr-kit/claude-entrypoints/.claude"
+link "$K/claude/commands" "$claude_entries/commands"
+link "$K/claude/skills" "$claude_entries/skills"
+link "$K/claude/bin/herdr-claude" "$HOME/.local/bin/herdr-claude"
+
+# Migrate only links created by this checkout's earlier installers.
+for f in "$K"/claude/commands/*.md "$K"/claude/skills/*; do
+  relative=${f#"$K/claude/"}
+  old="$HOME/.claude/$relative"
+  if [ -L "$old" ]; then
+    case $(readlink "$old") in
+      "$f"|"$K/$relative") unlink "$old"; echo "unlinked: $old" ;;
+    esac
+  fi
+done
 link "$K/claude/hooks/herdr-tab-name.sh" "$HOME/.claude/hooks/herdr-tab-name.sh"
 link "$K/shared/bin/herdr-notes" "$HOME/.local/bin/herdr-notes"
 link "$K/shared/bin/herdr-resolve-workers" "$HOME/.local/bin/herdr-resolve-workers"
