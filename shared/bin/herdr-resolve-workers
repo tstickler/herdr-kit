@@ -1,0 +1,97 @@
+#!/bin/sh
+# Print one harness/template pair per line, tab separated.
+set -eu
+
+if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
+  echo 'Usage: herdr-resolve-workers <role> <calling-harness> [harness[,harness...]]' >&2
+  exit 2
+fi
+
+role=$1
+caller=$2
+routes="$HOME/.config/herdr-kit/harnesses.json"
+
+if [ ! -r "$routes" ]; then
+  echo "Missing $routes. Rerun herdr-kit/install.sh." >&2
+  exit 1
+fi
+
+if ! jq -e --arg caller "$caller" --arg role "$role" \
+    '.[$caller].templates[$role] != null' "$routes" >/dev/null; then
+  echo "No worker route for role '$role' from harness '$caller'." >&2
+  exit 2
+fi
+
+if [ "$#" -eq 3 ]; then
+  selected=$(jq -cn --arg list "$3" '
+    $list | split(",") | map(gsub("^\\s+|\\s+$"; ""))
+    | reduce .[] as $name ([]; if index($name) == null then . + [$name] else . end)
+  ')
+  if ! printf '%s\n' "$selected" | jq -e 'length > 0 and all(.[]; test("^[a-z0-9-]+$"))' >/dev/null; then
+    echo "Expected harness names separated by commas, got '$3'." >&2
+    exit 2
+  fi
+  if [ "$role" = research ] && [ "$(printf '%s\n' "$selected" | jq length)" -gt 1 ]; then
+    echo "Research uses one worker. Choose a single harness." >&2
+    exit 2
+  fi
+else
+  selected=$(jq -c --arg caller "$caller" --arg role "$role" '
+    if $role == "critique" then ([.[$caller].critique_peer, $caller] | map(select(. != null)))
+    else [$caller]
+    end
+  ' "$routes")
+fi
+
+if ! installed=$(hc templates --json); then
+  printf 'Could not list Herdr templates. %s\n' "$installed" >&2
+  exit 1
+fi
+if ! template_names=$(printf '%s\n' "$installed" | jq -ce '.templates | map(.name)'); then
+  echo 'Herdr returned an invalid template list.' >&2
+  exit 1
+fi
+
+check_worker() {
+  harness=$1
+  if ! executable=$(jq -er --arg harness "$harness" '.[$harness].executable' "$routes"); then
+    printf "Unknown harness '%s'.\n" "$harness"
+    return 1
+  fi
+  if ! template=$(jq -er --arg harness "$harness" --arg role "$role" '.[$harness].templates[$role]' "$routes"); then
+    printf "No %s template is configured for %s.\n" "$role" "$harness"
+    return 1
+  fi
+
+  if ! command -v "$executable" >/dev/null 2>&1; then
+    printf "%s executable '%s' is missing from PATH.\n" "$harness" "$executable"
+    return 1
+  fi
+  if ! printf '%s\n' "$template_names" | jq -e --arg name "$template" 'index($name) != null' >/dev/null; then
+    printf "%s template '%s' is missing from Herdr.\n" "$harness" "$template"
+    return 1
+  fi
+  printf '%s\t%s\n' "$harness" "$template"
+}
+
+workers=
+failed=0
+# Harness names contain only letters, digits and hyphens.
+for name in $(printf '%s\n' "$selected" | jq -r '.[]'); do
+  if worker=$(check_worker "$name"); then
+    if [ "$#" -eq 2 ]; then
+      printf '%s\n' "$worker"
+      exit 0
+    fi
+    workers="${workers:+$workers
+}$worker"
+  else
+    failed=1
+    if [ "$#" -eq 3 ] || [ "$name" = "$caller" ]; then
+      printf '%s\n' "$worker" >&2
+    fi
+  fi
+done
+
+[ "$failed" -eq 0 ] || exit 1
+printf '%s\n' "$workers"
