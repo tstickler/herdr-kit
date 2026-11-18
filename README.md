@@ -27,13 +27,13 @@ precisely enough for `writer-low`, it isn't a `writer-low` task.
 | `reader` | Fable, medium | Reviews diffs from `writer-low`, `writer` and `writer-high`. Read-only, except for one findings file. |
 | `reader-deep` | Fable, high | Reviews `writer-deep` diffs. |
 | `critique` | Fable, high | Attacks a plan before it's built. Launched by `/critique`. |
-| `design` | Fable, medium | Proposes one design through a given lens. `/design` runs three and compares them. |
+| `design` | Fable, medium | Proposes one design through a given lens. The design command compares the results. |
 | `research` | Sonnet, medium | Answers a codebase question with path:line evidence, in the background. `/research`. |
 | `spike` | Sonnet, medium | Throwaway prototype in its own worktree. `/spike` runs one per approach. |
 
 ## Codex workers (optional)
 
-On a machine with `codex` on PATH, `install.sh` adds Codex writers, readers, a critic, and a designer.
+On a machine with `codex` on PATH, `install.sh` adds Codex writers, readers, and helper workers.
 
 | Template | Codex model |
 |---|---|
@@ -45,15 +45,17 @@ On a machine with `codex` on PATH, `install.sh` adds Codex writers, readers, a c
 | `reader-deep-codex` | Astra, high |
 | `critique-codex` | Astra, high |
 | `design-codex` | Astra, medium |
+| `research-codex` | Astra, medium |
+| `spike-codex` | Terra, medium |
 
 Each template runs `codex --no-daemon -p herdr-<role>`,
 and the install writes those profiles to `~/.codex/herdr-<role>.config.toml` with the model, effort, sandbox,
-and `CLAUDE.md` as a fallback for `AGENTS.md`. When the Codex templates are installed, `/critique`
-runs both critics side by side and `/design` has one of its three designers on Codex.
+and `CLAUDE.md` as a fallback for `AGENTS.md`.
 
-Sandboxes: Codex readers, the critic and the designer run sandboxed with network on (`hc send` needs its
-socket). Codex writers run with no sandbox, because Xcode's package resolution starts its own `sandbox-exec`,
-which macOS refuses inside Codex's. Their template rules are what hold them, as with the Claude writers.
+Codex readers, critics, designers, and researchers run sandboxed with network access for
+`hc send`. Codex writers and Spike workers run without a sandbox so projects can build with Xcode and
+SwiftPM, which start their own `sandbox-exec` process on macOS. Spike workers are instructed to work
+in their assigned worktrees.
 
 Machine-specific settings go in `~/.config/herdr-kit/local.env`, never in this repo. For example, when Codex goes
 through a proxy that prefixes model ids:
@@ -87,14 +89,28 @@ Epic writes `level: low|medium|high|deep` on new tasks. Lead uses the level to p
 template and uses the deep reviewer for deep tasks. Legacy `worker:` labels, including `-codex`
 labels, supply the task level. The Lead invocation supplies the provider.
 
-Plan critique uses `/critique` in Claude Code and the `critique-codex` template directly in Codex Epic.
+Epic in either harness uses the shared Critique command. Pass `harness=` to Epic to choose the plan
+reviewer. Epic keeps the plan and pauses before task creation if critique is blocked. Retry with
+another harness to continue from the same plan. Lead's `writer=` and `reader=` choices are separate.
 
 ## Helper commands
 
-Claude Code's `/critique`, `/design`, `/research`, and `/spike` load their instructions from
-`shared/commands/` through the installed `~/.config/herdr-kit/commands` link. The entry points supply
-the arguments and choose the worker templates. Other agent harnesses can supply their own entry
-points to the same commands. Lead and Epic live in `shared/workflows/` and coordinate multiple stages.
+Use `/critique`, `/design`, `/research`, and `/spike` in Claude Code, or `$critique`, `$design`,
+`$research`, and `$spike` in Codex. They use the same instructions from `shared/commands/`. Append
+`harness=claude`, `harness=codex`, or `harness=claude,codex` to select the worker harnesses.
+
+| Command | Default | When both harnesses are selected |
+|---|---|---|
+| Critique | One reviewer from the opposite harness if available, otherwise one from the calling harness | Two independent reviews of the same plan |
+| Design | The calling harness runs all three lenses | Each harness runs all three lenses, for six proposals |
+| Research | One background worker from the calling harness | Choose one harness |
+| Spike | The calling harness prototypes every approach | Each harness prototypes every approach in separate worktrees |
+
+The worker resolver checks the executable and Herdr template immediately before launch. Explicit
+selections must all be available. If a worker fails during the run, including when it hits a usage
+cap, completed reports are retained and the failure is reported. Critique reports are written to a
+fresh temporary directory so both reviewers can write them. The worker mappings live in
+`harnesses.json` and can grow as more harnesses are added.
 
 ## From ticket to merge
 
@@ -137,8 +153,8 @@ repo and every worktree beside it, and coworkers never see it:
 5. Check from your app folder: `herdr-notes lead | head -1` should name your notes file.
 6. Open a Herdr tab in the repo, run `claude`, then `/lead`.
 
-To update, run `git pull` in `herdr-kit`. If you installed the kit before helper commands moved to
-`shared/commands/`, rerun `./install.sh` once to update the installed links.
+To update, run `git pull` in `herdr-kit`. Rerun `./install.sh` once to install the shared command and
+worker resolver links and the new Codex profiles.
 
 ## What's in here
 
@@ -150,14 +166,15 @@ claude/
   hooks/              Claude session tab naming
   setup.sh            Claude setup called by the top-level installer
 codex/
-  skills/             Lead and Epic entry points → ~/.agents/skills/
+  skills/             Lead, Epic, and helper entry points → ~/.agents/skills/
   templates/          Codex workers → ~/.config/herdr-core/templates/
   setup.sh            Codex setup called by the top-level installer
 shared/
   commands/           Critique, Design, Research, and Spike instructions → ~/.config/herdr-kit/commands/
   workflows/          Lead and Epic instructions and task levels
-  bin/herdr-notes     Project notes lookup → ~/.local/bin/
+  bin/                Project notes lookup and worker resolver → ~/.local/bin/
   herdr-settings.json Herdr app defaults
+harnesses.json        Worker executables and template mappings
 install.sh            Installs the kit
 ```
 

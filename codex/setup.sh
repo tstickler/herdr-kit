@@ -39,7 +39,7 @@ setup_codex() (
   for f in "$K"/codex/templates/*.md; do link "$f" "$HOME/.config/herdr-core/templates/$(basename "$f")"; done
   for d in "$K"/codex/skills/*; do link_skill "$d"; done
 
-  # Writers run unsandboxed (full): Xcode's SPM resolution starts its own sandbox-exec, which macOS
+  # Writers and spikes run unsandboxed (full): Xcode's SPM resolution starts its own sandbox-exec, which macOS
   # refuses inside Codex's sandbox. Read-only roles keep a sandbox, with network on (hc's socket needs
   # it) and hc's state folder writable.
   profile() { # <role> <model> <effort> <full|sandboxed>
@@ -77,4 +77,6 @@ setup_codex() (
   profile reader-deep gpt-6-astra   high   sandboxed
   profile critique    gpt-6-astra   high   sandboxed
   profile design      gpt-6-astra   medium sandboxed
+  profile research    gpt-6-astra   medium sandboxed
+  profile spike       gpt-6.1-terra medium full
 )

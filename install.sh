@@ -15,7 +15,9 @@ link() {
 }
 
 link "$K/shared/commands" "$HOME/.config/herdr-kit/commands"
+link "$K/harnesses.json" "$HOME/.config/herdr-kit/harnesses.json"
 link "$K/shared/bin/herdr-notes" "$HOME/.local/bin/herdr-notes"
+link "$K/shared/bin/herdr-resolve-workers" "$HOME/.local/bin/herdr-resolve-workers"
 
 # Your Herdr look. Anything already set on this machine wins.
 h="$HOME/.config/herdr-app/settings.json"
