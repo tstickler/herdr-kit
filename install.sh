@@ -58,4 +58,49 @@ echo "ok: $h"
 # Codex workers, only on machines with codex installed.
 "$K/codex/install.sh"
 
+# Keep the usual agent names in Herdr's app menu and honor customized launches.
+claude_launcher=
+codex_launcher=
+if command -v claude >/dev/null 2>&1; then claude_launcher="$HOME/.local/bin/herdr-claude"; fi
+if command -v codex >/dev/null 2>&1; then codex_launcher="$HOME/.local/bin/herdr-codex"; fi
+if [ -n "$claude_launcher$codex_launcher" ]; then
+  programs="$HOME/.config/herdr-app/programs.json"
+  [ -f "$programs" ] || echo '{}' > "$programs"
+  jq --arg claude "$claude_launcher" --arg codex "$codex_launcher" '
+    (if $claude != "" then .programs.claude.run //= [$claude] else . end)
+    | (if $codex != "" then .programs.codex.run //= [$codex] else . end)
+  ' "$programs" > "$programs.tmp"
+  mv "$programs.tmp" "$programs"
+fi
+
+# Use the same names when typing into Herdr's interactive shells.
+link "$K/shell-launchers.sh" "$HOME/.config/herdr-kit/shell-launchers.sh"
+configure_shell() {
+  if [ -f "$1" ] && grep -qF '# Herdr Kit launchers' "$1"; then return; fi
+  mkdir -p "$(dirname "$1")"
+  cat >> "$1" <<'EOF'
+
+# Herdr Kit launchers
+if [ -n "${BASH_VERSION:-}${ZSH_VERSION:-}" ] && [ -n "${HC_TERMINAL_ID:-}" ] &&
+    [ -r "$HOME/.config/herdr-kit/shell-launchers.sh" ]; then
+  . "$HOME/.config/herdr-kit/shell-launchers.sh"
+fi
+EOF
+  echo "ok: $1"
+}
+login_shell=${SHELL:-}
+case ${login_shell##*/} in
+  zsh) configure_shell "${ZDOTDIR:-$HOME}/.zshrc" ;;
+  bash)
+    configure_shell "$HOME/.bashrc"
+    login_profile="$HOME/.bash_profile"
+    if [ ! -e "$login_profile" ]; then
+      if [ -e "$HOME/.bash_login" ]; then login_profile="$HOME/.bash_login"
+      elif [ -e "$HOME/.profile" ]; then login_profile="$HOME/.profile"
+      fi
+    fi
+    configure_shell "$login_profile"
+    ;;
+esac
+
 echo "Done. Project notes go in <project>/.claude/herdr/<role>.md; see README.md."

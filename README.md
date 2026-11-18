@@ -71,8 +71,8 @@ are installed, `./codex/install.sh` can add or refresh Codex support.
 Displaced Codex skills are backed up under `~/.config/herdr-kit/skill-backups/`.
 Run `codex login` if needed and choose **Sign in with ChatGPT** to use your subscription.
 
-From a Herdr tab in your project, start `herdr-claude` for `/lead` and `/epic`, or `herdr-codex` for
-`$lead` and `$epic`. Both harnesses load the same workflows from `shared/workflows/` and use your
+From a Herdr tab in your project, launch Claude for `/lead` and `/epic`, or Codex for `$lead` and
+`$epic`. Both harnesses load the same workflows from `shared/workflows/` and use your
 current session's model, reasoning effort, and permissions. Workers use their own templates.
 
 Lead defaults to Claude writing and Codex reviewing. Set `writer=` and `reader=` independently
@@ -94,14 +94,13 @@ another harness to continue from the same plan. Lead's `writer=` and `reader=` c
 
 ## Helper commands
 
-Start Claude or Codex with the Herdr launcher for the kit commands to appear in that session.
-The launchers check `HC_TERMINAL_ID`. In Herdr, `herdr-claude` adds the kit's entry-point directory
-and `herdr-codex` enables the kit skills by path for that launch. Ordinary agent launches use their
-usual command and skill lists. The install migrates older global kit links and preserves personal
-commands and skills.
+Use Herdr's Claude and Codex menu entries, or type `claude` or `codex` in a new zsh or Bash terminal
+inside Herdr. The installer connects those launches to the kit's session-specific entry points.
+Ordinary agent launches use their usual command and skill lists. Existing custom menu launch
+commands, shell functions, and aliases keep their precedence.
 
-Use `/critique`, `/design`, `/research`, and `/spike` in `herdr-claude`, or `$critique`, `$design`,
-`$research`, and `$spike` in `herdr-codex`. They use the same instructions from `shared/commands/`.
+Use `/critique`, `/design`, `/research`, and `/spike` in Claude, or `$critique`, `$design`,
+`$research`, and `$spike` in Codex. They use the same instructions from `shared/commands/`.
 Append `harness=claude`, `harness=codex`, or `harness=claude,codex` to select the worker harnesses.
 
 | Command | Default | When both harnesses are selected |
@@ -156,11 +155,11 @@ repo and every worktree beside it, and coworkers never see it:
 3. Run `herdr-kit/install.sh`. It installs the templates, launchers, and session-scoped entry points.
 4. Write your project's notes: `mkdir -p <parent>/.claude/herdr`, then add `lead.md` and `epic.md` there.
 5. Check from your app folder: `herdr-notes lead | head -1` should name your notes file.
-6. Open a Herdr tab in the repo, run `herdr-claude`, then `/lead`.
+6. Open a Herdr tab in the repo, start Claude, then run `/lead`.
 
 To update, run `git pull` in `herdr-kit`. Rerun `./install.sh` once to migrate the old global links,
-install the launchers and worker resolver, and update the Codex profiles. Start a new agent session
-to pick up the scoped command list.
+install the launch integration and worker resolver, and update the Codex profiles. Open a new Herdr
+terminal to pick up the shell integration.
 
 ## What's in here
 

@@ -10,7 +10,13 @@ if [ -n "${HC_TERMINAL_ID:-}" ]; then
     split("\u0000") | map(select(length > 0) | "{path=\(. | @json),enabled=true}")
     | "[" + join(",") + "]"
   ')
-  exec codex -c "skills.config=$rules" "$@"
+  for arg do
+    case $arg in
+      --no-daemon) exec codex -c "skills.config=$rules" "$@" ;;
+      --) break ;;
+    esac
+  done
+  exec codex --no-daemon -c "skills.config=$rules" "$@"
 fi
 
 exec codex "$@"
