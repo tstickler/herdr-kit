@@ -99,10 +99,10 @@ inside Herdr. The installer connects those launches to the kit's session-specifi
 Ordinary agent launches use their usual command and skill lists. Existing custom menu launch
 commands, shell functions, and aliases keep their precedence.
 
-On an interactive install with Claude Code, the installer opens the kit's entry-point directory in
-Claude the first time it needs trust. Choose **Yes, I trust this folder**, then exit Claude. Future
-Herdr launches can use that directory without asking each session. Noninteractive installs skip
-this step. To skip it in an interactive install, pass `--skip-claude-trust`.
+The first time you start Claude from Herdr's menu or run plain `claude` in a Herdr terminal, the
+launcher opens the kit's entry-point directory if it still needs trust. Choose **Yes, I trust this
+folder**, then exit that setup session. Claude saves your approval and the launcher opens your project.
+Future launches go straight to the project.
 
 Use `/critique`, `/design`, `/research`, and `/spike` in Claude, or `$critique`, `$design`,
 `$research`, and `$spike` in Codex. They use the same instructions from `shared/commands/`.
@@ -158,7 +158,6 @@ repo and every worktree beside it, and coworkers never see it:
 1. Install Herdr and `jq`, and make sure `~/.local/bin` is on your PATH.
 2. `git clone https://github.com/tstickler/herdr-kit`
 3. Run `herdr-kit/install.sh` to install the templates, launchers, and session-scoped entry points.
-   If Claude opens for one-time directory trust, review the prompt, approve it, then exit Claude.
 4. Write your project's notes: `mkdir -p <parent>/.claude/herdr`, then add `lead.md` and `epic.md` there.
 5. Check from your app folder: `herdr-notes lead | head -1` should name your notes file.
 6. Open a Herdr tab in the repo, start Claude, then run `/lead`.

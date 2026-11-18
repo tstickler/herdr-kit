@@ -4,20 +4,6 @@
 set -eu
 K=$(cd "$(dirname "$0")" && pwd -P)
 
-usage() {
-  echo 'Usage: ./install.sh [--skip-claude-trust]'
-  echo 'Interactive installs open Claude for one-time kit directory trust when needed.'
-}
-
-setup_claude_trust=true
-if [ "$#" -gt 1 ]; then usage >&2; exit 2; fi
-case ${1:-} in
-  '') ;;
-  -h|--help) usage; exit 0 ;;
-  --skip-claude-trust) setup_claude_trust=false ;;
-  *) usage >&2; exit 2 ;;
-esac
-
 command -v jq >/dev/null || { echo "Install jq first: brew install jq"; exit 1; }
 command -v hc >/dev/null || echo "Warning: hc is not on PATH. Add ~/.local/bin to PATH in ~/.zshrc."
 
@@ -118,15 +104,3 @@ case ${login_shell##*/} in
 esac
 
 echo "Done. Project notes go in <project>/.claude/herdr/<role>.md; see README.md."
-
-if [ "$setup_claude_trust" = true ] && [ -n "$claude_launcher" ] && [ -t 0 ] && [ -t 1 ]; then
-  entries_path=$(cd "$claude_entries" && pwd -P)
-  claude_state="${CLAUDE_CONFIG_DIR:-$HOME}/.claude.json"
-  if ! jq -e --arg path "$entries_path" '.projects[$path].hasTrustDialogAccepted == true' \
-      "$claude_state" >/dev/null 2>&1; then
-    echo 'Claude is opening the kit directory for one-time trust setup.'
-    echo 'Choose Yes, I trust this folder if prompted, then exit Claude.'
-    cd "$entries_path"
-    exec claude
-  fi
-fi

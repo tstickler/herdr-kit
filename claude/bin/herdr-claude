@@ -7,6 +7,26 @@ if [ -n "${HC_TERMINAL_ID:-}" ]; then
     echo 'Herdr Claude entry points are missing. Rerun herdr-kit/install.sh.' >&2
     exit 1
   fi
+
+  # Run ahead of a plain interactive launch so CLI subcommands and scripts pass through.
+  if [ "$#" -eq 0 ] && [ -t 0 ] && [ -t 1 ]; then
+    entries_path=$(cd "$entries" && pwd -P)
+    claude_state="${CLAUDE_CONFIG_DIR:-$HOME}/.claude.json"
+    trusts_entries() {
+      jq -e --arg path "$entries_path" '.projects[$path].hasTrustDialogAccepted == true' \
+        "$claude_state" >/dev/null 2>&1
+    }
+    if ! trusts_entries; then
+      echo 'Claude is opening the kit directory for one-time trust setup.'
+      echo 'Choose Yes, I trust this folder, then exit Claude to open your project.'
+      (cd "$entries_path" && claude) || :
+      if ! trusts_entries; then
+        echo 'Opening your project without the kit commands for this session.'
+        exec claude "$@"
+      fi
+    fi
+  fi
+
   # Place the option before an explicit delimiter, or after the user's arguments.
   scoped=false
   for arg do
