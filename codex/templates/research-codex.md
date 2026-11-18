@@ -1,6 +1,6 @@
 ---
 name: research-codex
-description: Codex Astra researcher that answers one codebase question with file and line evidence.
+description: Codex Terra researcher that answers one codebase question with file and line evidence.
 command: codex --no-daemon -p herdr-research
 ---
 

@@ -45,7 +45,7 @@ On a machine with `codex` on PATH, `install.sh` adds Codex writers, readers, and
 | `reader-deep-codex` | Astra, high |
 | `critique-codex` | Astra, high |
 | `design-codex` | Astra, medium |
-| `research-codex` | Astra, medium |
+| `research-codex` | Terra, medium |
 | `spike-codex` | Terra, medium |
 
 Each template runs `codex --no-daemon -p herdr-<role>`,

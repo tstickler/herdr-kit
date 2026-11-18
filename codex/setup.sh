@@ -77,6 +77,6 @@ setup_codex() (
   profile reader-deep gpt-6-astra   high   sandboxed
   profile critique    gpt-6-astra   high   sandboxed
   profile design      gpt-6-astra   medium sandboxed
-  profile research    gpt-6-astra   medium sandboxed
+  profile research    gpt-6.1-terra medium sandboxed
   profile spike       gpt-6.1-terra medium full
 )
