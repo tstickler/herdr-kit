@@ -24,6 +24,6 @@ if [ "$1" = clear ]; then
   rename "" && hc label "$HC_TERMINAL_ID" autotab= "autotab_stale=$title" >/dev/null 2>&1
   exit 0
 fi
-[ -n "$title" ] && [ "$title" != "$name" ] && [ "$title" != "$stale" ] || exit 0
+[ -n "$title" ] && [ "$title" != "Claude Code" ] && [ "$title" != "$name" ] && [ "$title" != "$stale" ] || exit 0
 rename "$title" && hc label "$HC_TERMINAL_ID" "autotab=$title" autotab_stale= >/dev/null 2>&1
 exit 0
