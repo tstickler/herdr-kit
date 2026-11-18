@@ -19,7 +19,6 @@ for f in "$K"/claude/commands/*.md; do link "$f" "$HOME/.claude/commands/$(basen
 link "$K/claude/skills/lead" "$HOME/.claude/skills/lead"
 link "$K/claude/skills/epic" "$HOME/.claude/skills/epic"
 link "$K/claude/hooks/herdr-tab-name.sh" "$HOME/.claude/hooks/herdr-tab-name.sh"
-link "$K/claude/statusline.sh" "$HOME/.claude/statusline.sh"
 link "$K/shared/bin/herdr-notes" "$HOME/.local/bin/herdr-notes"
 
 s="$HOME/.claude/settings.json"
@@ -29,8 +28,7 @@ if grep -q herdr-tab-name "$s"; then
 else
   cp "$s" "$s.pre-herdr-kit"
   jq '.hooks.Stop += [{hooks:[{type:"command",command:"~/.claude/hooks/herdr-tab-name.sh"}]}]
-    | .hooks.SessionStart += [{matcher:"clear",hooks:[{type:"command",command:"~/.claude/hooks/herdr-tab-name.sh clear"}]}]
-    | .statusLine //= {type:"command",command:"~/.claude/statusline.sh"}' "$s.pre-herdr-kit" > "$s.tmp"
+    | .hooks.SessionStart += [{matcher:"clear",hooks:[{type:"command",command:"~/.claude/hooks/herdr-tab-name.sh clear"}]}]' "$s.pre-herdr-kit" > "$s.tmp"
   mv "$s.tmp" "$s"
   echo "ok: hooks added to $s (backup: $s.pre-herdr-kit)"
 fi
