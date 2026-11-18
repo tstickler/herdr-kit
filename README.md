@@ -64,9 +64,9 @@ CODEX_MODEL_PREFIX=global.openai.
 
 ## Lead and Epic in either harness
 
-Run `./install.sh` for a first install or an upgrade from the layout with root-level `skills/` and
-`bin/`. It updates the moved links, including the shared `herdr-notes` helper. If the kit is already
-installed with the `claude/` and `shared/` layout, use `./codex/install.sh` to add or refresh Codex support.
+Run `./install.sh` for a first install or upgrade. It installs shared resources and runs the
+harness setups. If you add Codex later, rerun the same installer to pick up its skills,
+worker templates, and profiles.
 Displaced Codex skills are backed up under `~/.config/herdr-kit/skill-backups/`.
 Run `codex login` if needed and choose **Sign in with ChatGPT** to use your subscription.
 
@@ -148,10 +148,11 @@ claude/
   commands/           Helper slash command entry points → ~/.claude/commands/
   templates/          Claude workers → ~/.config/herdr-core/templates/
   hooks/              Claude session tab naming
+  setup.sh            Claude setup called by the top-level installer
 codex/
   skills/             Lead and Epic entry points → ~/.agents/skills/
   templates/          Codex workers → ~/.config/herdr-core/templates/
-  install.sh          Codex skills, templates, and worker profiles
+  setup.sh            Codex setup called by the top-level installer
 shared/
   commands/           Critique, Design, Research, and Spike instructions → ~/.config/herdr-kit/commands/
   workflows/          Lead and Epic instructions and task levels
