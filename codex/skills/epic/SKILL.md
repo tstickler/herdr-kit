@@ -6,23 +6,7 @@ description: Take a feature through spec, plan critique, task breakdown, Lead ha
 # $epic
 
 Read and follow `references/epic.md`, relative to this skill file. Use `$lead` in the handoff.
+Take an optional trailing `harness=` selection from the Epic invocation for plan critique.
 
-## Plan critique
-
-Run this step inside Herdr with `hc` available and `$HC_TERMINAL_ID` set. If either is missing, ask the
-user to resume inside Herdr before continuing with the review.
-
-1. Check that `hc templates` lists `critique-codex`. If it is missing, report the blocker. Name the
-   terminal `<slug>-critic-codex` using the feature slug. Keep the prefix at 18 characters or fewer.
-   If the name is in use, add a run number before `-critic-` and shorten the slug as needed. Create a
-   fresh directory with `mktemp -d /tmp/herdr-critique.XXXXXX`. Write a brief with the absolute plan
-   path and the absolute report path `<temporary directory>/<critic-name>.md`. Keep the report path
-   to read after the critic replies.
-2. Launch `hc run --json --bg --name <critic-name> --cwd <repo> critique-codex "$(cat <brief file>)"`.
-   Record the terminal ID from the successful launch. If `first_message.sent` is false, inspect
-   `hc read <terminal-id>`. If Codex is waiting for workspace
-   trust, ask the user to accept it. Once the terminal is ready, send the installed template body
-   from `~/.config/herdr-core/templates/critique-codex.md` followed by the brief.
-3. Wait with `hc wait <terminal-id>` for its report. Check findings against the code and present the
-   confirmed issues and proposed edits. If the worker is blocked, surface the blocker. Once you have
-   read its report, close the critic with `hc kill <terminal-id>` and `hc rm <terminal-id>`.
+At plan review, follow `~/.config/herdr-kit/commands/critique.md` with `codex` as the calling harness,
+the absolute plan path, the feature slug, and the optional harness selection.

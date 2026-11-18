@@ -1,10 +1,8 @@
 ---
-description: Send a helper agent to research the codebase in the background while we keep working
-argument-hint: <question about the codebase>
+description: Start background Herdr research on a codebase question and collect its report.
+argument-hint: "<codebase question> [harness=claude|codex]"
 ---
 
-Read and follow `~/.config/herdr-kit/commands/research.md` with the `research` worker template.
-
-Research question:
+Read and follow `~/.config/herdr-kit/commands/research.md` with `claude` as the calling harness. Use the arguments below, including an optional trailing `harness=` selection.
 
 $ARGUMENTS

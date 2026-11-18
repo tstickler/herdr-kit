@@ -1,13 +1,8 @@
 ---
-description: Have a fresh helper agent attack a plan before implementation starts
-argument-hint: [path to plan — defaults to the newest file in docs/plans/]
+description: Review a plan independently before implementation.
+argument-hint: "[plan path] [harness=claude|codex|claude,codex]"
 ---
 
-Read and follow `~/.config/herdr-kit/commands/critique.md`. Use `critique` as the primary
-template with the label `claude` and write its report next to the plan. Use `critique-codex`
-as the optional second template with the label `codex`. Give it a fresh report directory
-created with `mktemp -d /tmp/herdr-critique.XXXXXX` so the worker can write there.
-
-Plan path (optional):
+Read and follow `~/.config/herdr-kit/commands/critique.md` with `claude` as the calling harness. Use the arguments below, including an optional trailing `harness=` selection.
 
 $ARGUMENTS

@@ -1,12 +1,8 @@
 ---
-description: Get 3 independent design proposals from helper agents, then compare them
-argument-hint: <design question or brief>
+description: Get independent Herdr design proposals through three lenses and compare them.
+argument-hint: "<design question or brief> [harness=claude|codex|claude,codex]"
 ---
 
-Read and follow `~/.config/herdr-kit/commands/design.md`. Use `design` for all three proposals.
-When `hc templates` lists `design-codex`, use it for `design-a` to get one proposal from a
-different model family.
-
-Design question or brief:
+Read and follow `~/.config/herdr-kit/commands/design.md` with `claude` as the calling harness. Use the arguments below, including an optional trailing `harness=` selection.
 
 $ARGUMENTS

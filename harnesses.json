@@ -1,0 +1,22 @@
+{
+  "claude": {
+    "executable": "claude",
+    "critique_peer": "codex",
+    "templates": {
+      "critique": "critique",
+      "design": "design",
+      "research": "research",
+      "spike": "spike"
+    }
+  },
+  "codex": {
+    "executable": "codex",
+    "critique_peer": "claude",
+    "templates": {
+      "critique": "critique-codex",
+      "design": "design-codex",
+      "research": "research-codex",
+      "spike": "spike-codex"
+    }
+  }
+}
