@@ -69,7 +69,7 @@ Codex skills. Otherwise run `./install.sh` for the initial setup, including the 
 Run `codex login` if needed and choose **Sign in with ChatGPT** to use your subscription.
 
 From a Herdr tab in your project, open Claude Code and use `/lead` or `/epic`. In a normal Codex
-session, use `$lead` or `$epic`. Both harnesses load the same workflows from `workflows/` and use
+session, use `$lead` or `$epic`. Both harnesses load the same workflows from `shared/workflows/` and use
 your current session's model, reasoning effort, and permissions. Workers use their own templates.
 
 Lead defaults to Claude writing and Codex reviewing. Set `writer=` and `reader=` independently
@@ -128,21 +128,27 @@ repo and every worktree beside it, and coworkers never see it:
 5. Check from your app folder: `herdr-notes lead | head -1` should name your notes file.
 6. Open a Herdr tab in the repo, run `claude`, then `/lead`.
 
-To update, run `git pull` in `herdr-kit`. If your Claude skills were installed from the old root
-`skills/` directory, rerun `./install.sh` once to relink them.
+To update, run `git pull` in `herdr-kit`. If you installed the kit before the `claude/` and `shared/`
+layout, rerun `./install.sh` once to relink the moved files.
 
 ## What's in here
 
 ```
-templates/        the 10 agents          → ~/.config/herdr-core/templates/
-codex/            Codex templates, profiles, and skill entry points
-claude/skills/    /lead, /epic           → ~/.claude/skills/
-workflows/        shared Lead and Epic instructions and task levels
-commands/         /critique /design /research /spike → ~/.claude/commands/
-bin/herdr-notes                          → ~/.local/bin/
-hooks/            names each Herdr tab after the Claude session
-statusline.sh
-install.sh
+claude/
+  skills/             Lead and Epic entry points → ~/.claude/skills/
+  commands/           critique, design, research, spike → ~/.claude/commands/
+  templates/          Claude workers → ~/.config/herdr-core/templates/
+  hooks/              Claude session tab naming
+  statusline.sh       Claude session status line
+codex/
+  skills/             Lead and Epic entry points → ~/.agents/skills/
+  templates/          Codex workers → ~/.config/herdr-core/templates/
+  install.sh          Codex skills, templates, and worker profiles
+shared/
+  workflows/          Lead and Epic instructions and task levels
+  bin/herdr-notes     Project notes lookup → ~/.local/bin/
+  herdr-settings.json Herdr app defaults
+install.sh            Installs the kit
 ```
 
 Every template sets its own model and effort. If a tier's diffs keep coming back from review, move that kind of

@@ -14,13 +14,13 @@ link() {
   ln -s "$1" "$2"; echo "linked: $2"
 }
 
-for f in "$K"/templates/*.md; do link "$f" "$HOME/.config/herdr-core/templates/$(basename "$f")"; done
-for f in "$K"/commands/*.md; do link "$f" "$HOME/.claude/commands/$(basename "$f")"; done
+for f in "$K"/claude/templates/*.md; do link "$f" "$HOME/.config/herdr-core/templates/$(basename "$f")"; done
+for f in "$K"/claude/commands/*.md; do link "$f" "$HOME/.claude/commands/$(basename "$f")"; done
 link "$K/claude/skills/lead" "$HOME/.claude/skills/lead"
 link "$K/claude/skills/epic" "$HOME/.claude/skills/epic"
-link "$K/hooks/herdr-tab-name.sh" "$HOME/.claude/hooks/herdr-tab-name.sh"
-link "$K/statusline.sh" "$HOME/.claude/statusline.sh"
-link "$K/bin/herdr-notes" "$HOME/.local/bin/herdr-notes"
+link "$K/claude/hooks/herdr-tab-name.sh" "$HOME/.claude/hooks/herdr-tab-name.sh"
+link "$K/claude/statusline.sh" "$HOME/.claude/statusline.sh"
+link "$K/shared/bin/herdr-notes" "$HOME/.local/bin/herdr-notes"
 
 s="$HOME/.claude/settings.json"
 [ -f "$s" ] || echo '{}' > "$s"
@@ -39,7 +39,7 @@ fi
 h="$HOME/.config/herdr-app/settings.json"
 mkdir -p "$(dirname "$h")"
 [ -f "$h" ] || echo '{}' > "$h"
-jq -s '.[0] * .[1]' "$K/herdr-settings.json" "$h" > "$h.tmp" && mv "$h.tmp" "$h"
+jq -s '.[0] * .[1]' "$K/shared/herdr-settings.json" "$h" > "$h.tmp" && mv "$h.tmp" "$h"
 echo "ok: $h"
 
 # Codex workers, only on machines with codex installed.

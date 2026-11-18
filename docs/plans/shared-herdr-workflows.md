@@ -12,7 +12,7 @@ This design covers Lead, Epic, and how Lead selects a writer and reviewer. Criti
 | Project notes | Ticket format and location, repository layout, worktree conventions, and shared resources |
 | Herdr templates and worker profiles | Launch commands, model IDs, reasoning effort, and permissions |
 
-Keep one canonical Markdown body for each workflow under `workflows/`. The installed Claude and Codex skills should each point to that body through a reference shipped with the skill. The reference must work from a project outside the kit checkout. The current session supplies the lead or epic model, effort, and permissions. The workflows still use Herdr to launch and communicate with workers.
+Keep one canonical Markdown body for each workflow under `shared/workflows/`. The installed Claude and Codex skills should each point to that body through a reference shipped with the skill. The reference must work from a project outside the kit checkout. The current session supplies the lead or epic model, effort, and permissions. The workflows still use Herdr to launch and communicate with workers.
 
 ## Lead invocation and routing
 
