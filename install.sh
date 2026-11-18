@@ -14,13 +14,12 @@ link() {
   ln -s "$1" "$2"; echo "linked: $2"
 }
 
-for f in "$K"/templates/*.md; do link "$f" "$HOME/.config/herdr-core/templates/$(basename "$f")"; done
-for f in "$K"/commands/*.md; do link "$f" "$HOME/.claude/commands/$(basename "$f")"; done
-link "$K/skills/lead" "$HOME/.claude/skills/lead"
-link "$K/skills/epic" "$HOME/.claude/skills/epic"
-link "$K/hooks/herdr-tab-name.sh" "$HOME/.claude/hooks/herdr-tab-name.sh"
-link "$K/statusline.sh" "$HOME/.claude/statusline.sh"
-link "$K/bin/herdr-notes" "$HOME/.local/bin/herdr-notes"
+for f in "$K"/claude/templates/*.md; do link "$f" "$HOME/.config/herdr-core/templates/$(basename "$f")"; done
+for f in "$K"/claude/commands/*.md; do link "$f" "$HOME/.claude/commands/$(basename "$f")"; done
+link "$K/claude/skills/lead" "$HOME/.claude/skills/lead"
+link "$K/claude/skills/epic" "$HOME/.claude/skills/epic"
+link "$K/claude/hooks/herdr-tab-name.sh" "$HOME/.claude/hooks/herdr-tab-name.sh"
+link "$K/shared/bin/herdr-notes" "$HOME/.local/bin/herdr-notes"
 
 s="$HOME/.claude/settings.json"
 [ -f "$s" ] || echo '{}' > "$s"
@@ -29,8 +28,7 @@ if grep -q herdr-tab-name "$s"; then
 else
   cp "$s" "$s.pre-herdr-kit"
   jq '.hooks.Stop += [{hooks:[{type:"command",command:"~/.claude/hooks/herdr-tab-name.sh"}]}]
-    | .hooks.SessionStart += [{matcher:"clear",hooks:[{type:"command",command:"~/.claude/hooks/herdr-tab-name.sh clear"}]}]
-    | .statusLine //= {type:"command",command:"~/.claude/statusline.sh"}' "$s.pre-herdr-kit" > "$s.tmp"
+    | .hooks.SessionStart += [{matcher:"clear",hooks:[{type:"command",command:"~/.claude/hooks/herdr-tab-name.sh clear"}]}]' "$s.pre-herdr-kit" > "$s.tmp"
   mv "$s.tmp" "$s"
   echo "ok: hooks added to $s (backup: $s.pre-herdr-kit)"
 fi
@@ -39,7 +37,7 @@ fi
 h="$HOME/.config/herdr-app/settings.json"
 mkdir -p "$(dirname "$h")"
 [ -f "$h" ] || echo '{}' > "$h"
-jq -s '.[0] * .[1]' "$K/herdr-settings.json" "$h" > "$h.tmp" && mv "$h.tmp" "$h"
+jq -s '.[0] * .[1]' "$K/shared/herdr-settings.json" "$h" > "$h.tmp" && mv "$h.tmp" "$h"
 echo "ok: $h"
 
 # Codex workers, only on machines with codex installed.

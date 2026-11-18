@@ -1,6 +1,6 @@
 ---
 name: reader-codex
-description: Read-only Codex Astra reviewer for diffs from Claude's writer-low, writer and writer-high.
+description: Read-only Codex Astra reviewer for low, medium, and high task levels.
 command: codex --no-daemon -p herdr-reader
 ---
 

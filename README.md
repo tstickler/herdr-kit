@@ -1,6 +1,6 @@
 # herdr-kit
 
-A Claude Code + Herdr setup where a lead agent breaks work into tasks and hands each one to a worker on the right
+A Herdr setup for Claude Code and Codex where a lead agent breaks work into tasks and hands each one to a worker on the right
 model for the job. A reviewer checks every diff, and nothing merges without your yes. This repo holds everything
 generic. Each project adds short notes for the roles that need project detail.
 
@@ -33,25 +33,23 @@ precisely enough for `writer-low`, it isn't a `writer-low` task.
 
 ## Codex workers (optional)
 
-On a machine with `codex` on PATH, `install.sh` adds a Codex twin for each writer and reader, and for the critic
-and designer. Without Codex they are skipped and nothing else changes.
+On a machine with `codex` on PATH, `install.sh` adds Codex writers, readers, a critic, and a designer.
 
-| Template | Codex model | Claude twin |
-|---|---|---|
-| `writer-low-codex` | Luna, medium | `writer-low` |
-| `writer-codex` | Terra, medium | `writer` |
-| `writer-high-codex` | Sol, high | `writer-high` |
-| `writer-deep-codex` | Astra, high | `writer-deep` |
-| `reader-codex` | Astra, medium | `reader` |
-| `reader-deep-codex` | Astra, high | `reader-deep` |
-| `critique-codex` | Astra, high | `critique` |
-| `design-codex` | Astra, medium | `design` |
+| Template | Codex model |
+|---|---|
+| `writer-low-codex` | Luna, medium |
+| `writer-codex` | Terra, medium |
+| `writer-high-codex` | Sol, high |
+| `writer-deep-codex` | Astra, high |
+| `reader-codex` | Astra, medium |
+| `reader-deep-codex` | Astra, high |
+| `critique-codex` | Astra, high |
+| `design-codex` | Astra, medium |
 
-The bodies match their twins; only the launch differs. Each template runs `codex --no-daemon -p herdr-<role>`,
+Each template runs `codex --no-daemon -p herdr-<role>`,
 and the install writes those profiles to `~/.codex/herdr-<role>.config.toml` with the model, effort, sandbox,
-and `CLAUDE.md` as a fallback for `AGENTS.md`. `/lead` stays a Claude session. It uses Claude writers by default
-and, when both families are installed, sends each diff to the other family's reader. `/critique` then runs
-both critics side by side, and `/design` has one of its three designers on Codex.
+and `CLAUDE.md` as a fallback for `AGENTS.md`. When the Codex templates are installed, `/critique`
+runs both critics side by side and `/design` has one of its three designers on Codex.
 
 Sandboxes: Codex readers, the critic and the designer run sandboxed with network on (`hc send` needs its
 socket). Codex writers run with no sandbox, because Xcode's package resolution starts its own `sandbox-exec`,
@@ -64,14 +62,41 @@ through a proxy that prefixes model ids:
 CODEX_MODEL_PREFIX=global.openai.
 ```
 
+## Lead and Epic in either harness
+
+Run `./install.sh` for a first install or an upgrade from the layout with root-level `skills/` and
+`bin/`. It updates the moved links, including the shared `herdr-notes` helper. If the kit is already
+installed with the `claude/` and `shared/` layout, use `./codex/install.sh` to add or refresh Codex support.
+Displaced Codex skills are backed up under `~/.config/herdr-kit/skill-backups/`.
+Run `codex login` if needed and choose **Sign in with ChatGPT** to use your subscription.
+
+From a Herdr tab in your project, open Claude Code and use `/lead` or `/epic`. In a normal Codex
+session, use `$lead` or `$epic`. Both harnesses load the same workflows from `shared/workflows/` and use
+your current session's model, reasoning effort, and permissions. Workers use their own templates.
+
+Lead defaults to Claude writing and Codex reviewing. Set `writer=` and `reader=` independently
+for a run. A missing template or exhausted quota prompts you to choose another provider.
+
+```text
+/lead TICKET-123
+$lead TICKET-123 writer=codex
+$lead TICKET-123 writer=codex reader=claude
+```
+
+Epic writes `level: low|medium|high|deep` on new tasks. Lead uses the level to pick a writer
+template and uses the deep reviewer for deep tasks. Legacy `worker:` labels, including `-codex`
+labels, supply the task level. The Lead invocation supplies the provider.
+
+Plan critique uses `/critique` in Claude Code and the existing `critique-codex` template in Codex.
+
 ## From ticket to merge
 
-1. **`/epic`** writes the spec, then a plan that `/critique` attacks. It cuts the plan into tasks with one repo, one writer and an exact file list each. Every task gets a `worker:` line.
-2. **`/lead`** plans and delegates, and never writes code. It starts each task's writer in its own git worktree.
+1. **Epic** writes the spec and a plan, gets a critique, then defines tasks with one repo, one writer, an exact file list, and a `level:` each.
+2. **Lead** plans and delegates. It selects the writer and reviewer using the level and provider options, then starts the writer in its own git worktree.
 3. **The writer** makes the change, runs the tests, and reports back with `hc send`.
 4. **The reviewer** checks the diff for real bugs and for the repo's own rules.
-5. **You** get one summary of the diff and its review from `/lead`. Nothing merges without your yes.
-6. **`/epic` again** checks every acceptance criterion and shows a pass or fail table.
+5. **You** get one summary of the diff and its review from Lead. Nothing merges without your yes.
+6. **Epic again** checks every acceptance criterion and shows a pass or fail table.
 
 ## Project notes
 
@@ -100,24 +125,31 @@ repo and every worktree beside it, and coworkers never see it:
 
 1. Install Herdr and `jq`, and make sure `~/.local/bin` is on your PATH.
 2. `git clone https://github.com/tstickler/herdr-kit`
-3. Run `herdr-kit/install.sh`. It symlinks the templates, skills, commands and hook into place. A file already in the way is moved aside to `*.pre-herdr-kit`, never deleted.
+3. Run `herdr-kit/install.sh`. It symlinks the templates, skills, commands and hook into place and moves conflicting files aside.
 4. Write your project's notes: `mkdir -p <parent>/.claude/herdr`, then add `lead.md` and `epic.md` there.
 5. Check from your app folder: `herdr-notes lead | head -1` should name your notes file.
 6. Open a Herdr tab in the repo, run `claude`, then `/lead`.
 
-To update, run `git pull` in `herdr-kit`. The links pick up the change.
+To update, run `git pull` in `herdr-kit`. If you installed the kit before the `claude/` and `shared/`
+layout, rerun `./install.sh` once to relink the moved files.
 
 ## What's in here
 
 ```
-templates/        the 10 agents          → ~/.config/herdr-core/templates/
-codex/            Codex twins + their profiles, only when codex is installed
-skills/           /lead, /epic           → ~/.claude/skills/
-commands/         /critique /design /research /spike → ~/.claude/commands/
-bin/herdr-notes                          → ~/.local/bin/
-hooks/            names each Herdr tab after the Claude session
-statusline.sh
-install.sh
+claude/
+  skills/             Lead and Epic entry points → ~/.claude/skills/
+  commands/           critique, design, research, spike → ~/.claude/commands/
+  templates/          Claude workers → ~/.config/herdr-core/templates/
+  hooks/              Claude session tab naming
+codex/
+  skills/             Lead and Epic entry points → ~/.agents/skills/
+  templates/          Codex workers → ~/.config/herdr-core/templates/
+  install.sh          Codex skills, templates, and worker profiles
+shared/
+  workflows/          Lead and Epic instructions and task levels
+  bin/herdr-notes     Project notes lookup → ~/.local/bin/
+  herdr-settings.json Herdr app defaults
+install.sh            Installs the kit
 ```
 
 Every template sets its own model and effort. If a tier's diffs keep coming back from review, move that kind of
