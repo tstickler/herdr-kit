@@ -36,7 +36,9 @@ setup_codex() (
 
   # Writers and spikes run unsandboxed (full): Xcode's SPM resolution starts its own sandbox-exec, which macOS
   # refuses inside Codex's sandbox. Read-only roles keep a sandbox, with network on (hc's socket needs
-  # it) and hc's state folder writable.
+  # it) and hc's state folder writable, plus the folder context handoffs are written to.
+  handoff="${XDG_STATE_HOME:-$HOME/.local/state}/herdr-kit/handoff"
+  mkdir -p "$handoff"
   profile() { # <role> <model> <effort> <full|sandboxed>
     p="$home/herdr-$1.config.toml"
     if [ -f "$p" ] && ! grep -qF -e "$mark" -e "$legacy_mark" "$p"; then
@@ -56,7 +58,7 @@ setup_codex() (
         echo
         echo '[sandbox_workspace_write]'
         echo 'network_access = true'
-        printf "writable_roots = ['%s']\n" "$state"   # TOML literal string: no escapes
+        printf "writable_roots = ['%s', '%s']\n" "$state" "$handoff"   # TOML literal strings: no escapes
       fi
     } > "$p.tmp"
     mv "$p.tmp" "$p"
@@ -73,6 +75,20 @@ setup_codex() (
   profile design      gpt-6.2-astra medium sandboxed
   profile research    gpt-6.1-terra medium sandboxed
   profile spike       gpt-6.1-terra medium full
+
+  # Context handoff hook (shared with Claude). Codex skips it until it is trusted once with /hooks.
+  link "$K/shared/hooks/herdr-handoff.sh" "$home/hooks/herdr-handoff.sh"
+  hooks="$home/hooks.json"
+  [ -f "$hooks" ] || echo '{}' > "$hooks"
+  if grep -q herdr-handoff "$hooks"; then
+    echo "ok: handoff hook already in $hooks"
+  else
+    cp "$hooks" "$hooks.pre-herdr-handoff"
+    jq --arg c "$home/hooks/herdr-handoff.sh" '.hooks.PostToolUse += [{hooks:[{type:"command",command:$c}]}]' \
+      "$hooks.pre-herdr-handoff" > "$hooks.tmp"
+    mv "$hooks.tmp" "$hooks"
+    echo "ok: handoff hook added to $hooks (backup: $hooks.pre-herdr-handoff); trust it once with /hooks in Codex"
+  fi
 
   register_launcher codex
 )

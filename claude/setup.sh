@@ -30,6 +30,15 @@ setup_claude() (
     mv "$s.tmp" "$s"
     echo "ok: hooks added to $s (backup: $s.pre-herdr-kit)"
   fi
+  link "$K/shared/hooks/herdr-handoff.sh" "$HOME/.claude/hooks/herdr-handoff.sh"
+  if grep -q herdr-handoff "$s"; then
+    echo "ok: handoff hook already in $s"
+  else
+    cp "$s" "$s.pre-herdr-handoff"
+    jq '.hooks.PostToolUse += [{hooks:[{type:"command",command:"~/.claude/hooks/herdr-handoff.sh"}]}]' "$s.pre-herdr-handoff" > "$s.tmp"
+    mv "$s.tmp" "$s"
+    echo "ok: handoff hook added to $s (backup: $s.pre-herdr-handoff)"
+  fi
 
   register_launcher claude
 )
