@@ -37,7 +37,7 @@ New tickets carry a single `level:` field. Epic uses risk first and size second 
 | `high` | Larger changes or work in sensitive code that preserves its contract | `writer-high` | `writer-high-codex` |
 | `deep` | Cross-module design changes or changes to the behavior of a sensitive flow | `writer-deep` | `writer-deep-codex` |
 
-Use the selected provider’s `reader-deep` variant for `deep` tasks and its `reader` variant for the other levels. Workflows refer to template names. Profiles continue to supply the current models and effort.
+Use the selected provider’s `reader-deep` variant for `deep` tasks, its `reader-high` variant for `high` tasks, and its `reader` variant for the other levels. Workflows refer to template names. Profiles continue to supply the current models and effort.
 
 ### Existing tickets and unavailable workers
 

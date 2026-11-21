@@ -69,7 +69,8 @@ setup_codex() (
   profile writer      gpt-6.1-terra medium full
   profile writer-high gpt-6.2-sol   high   full
   profile writer-deep gpt-6.2-astra high   full
-  profile reader      gpt-6.2-astra medium sandboxed
+  profile reader      gpt-6.2-sol   medium sandboxed
+  profile reader-high gpt-6.2-astra medium sandboxed
   profile reader-deep gpt-6.2-astra high   sandboxed
   profile critique    gpt-6.2-astra high   sandboxed
   profile design      gpt-6.2-astra medium sandboxed

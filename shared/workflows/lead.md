@@ -29,8 +29,11 @@ invalid level or unknown legacy worker name before launching.
 | `high` | `writer-high` | `writer-high-codex` |
 | `deep` | `writer-deep` | `writer-deep-codex` |
 
-For Claude reviews, use `reader-deep` on deep tasks and `reader` otherwise. For Codex reviews, use
-`reader-deep-codex` on deep tasks and `reader-codex` otherwise.
+| Level | Claude reviewer | Codex reviewer |
+|---|---|---|
+| `low`, `medium` | `reader` | `reader-codex` |
+| `high` | `reader-high` | `reader-high-codex` |
+| `deep` | `reader-deep` | `reader-deep-codex` |
 
 Before creating a task worktree, check that `hc templates` lists both selected templates and tell
 the user the level and template names. If one is missing, name it and ask the user which available
