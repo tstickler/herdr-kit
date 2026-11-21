@@ -24,7 +24,8 @@ precisely enough for `writer-low`, it isn't a `writer-low` task.
 
 | Template | Model | Job |
 |---|---|---|
-| `reader` | Fable, medium | Reviews diffs from `writer-low`, `writer` and `writer-high`. Read-only, except for one findings file. |
+| `reader` | Opus, medium | Reviews diffs from `writer-low` and `writer`. Read-only, except for one findings file. |
+| `reader-high` | Fable, medium | Reviews `writer-high` diffs. |
 | `reader-deep` | Fable, high | Reviews `writer-deep` diffs. |
 | `critique` | Fable, high | Attacks a plan before it's built. Launched by `/critique`. |
 | `design` | Fable, medium | Proposes one design through a given lens. The design command compares the results. |
@@ -41,7 +42,8 @@ On a machine with `codex` on PATH, `install.sh` adds Codex writers, readers, and
 | `writer-codex` | Terra, medium |
 | `writer-high-codex` | Sol, high |
 | `writer-deep-codex` | Astra, high |
-| `reader-codex` | Astra, medium |
+| `reader-codex` | Sol, medium |
+| `reader-high-codex` | Astra, medium |
 | `reader-deep-codex` | Astra, high |
 | `critique-codex` | Astra, high |
 | `design-codex` | Astra, medium |
@@ -138,7 +140,7 @@ folder: where tickets live, the repos, worktree location, risky areas, and anyth
 A missing file means generic behavior. Safety rules stay in the templates, so an agent that skips its notes is
 still safe.
 
-Roles that read notes: `lead`, `epic`, `writer` (all four tiers), `reader` (both), `critique`, `design`,
+Roles that read notes: `lead`, `epic`, `writer` (all four tiers), `reader` (all three), `critique`, `design`,
 `research`, `spike`. Most projects only need `lead` (where tickets live and how their status moves, the repos,
 what can't run side by side) and `epic` (the ticket format and any extra steps). Notes belong to the project,
 never to this kit.
