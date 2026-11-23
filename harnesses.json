@@ -18,5 +18,15 @@
       "research": "research-codex",
       "spike": "spike-codex"
     }
+  },
+  "antigravity": {
+    "executable": "agy",
+    "critique_peer": "claude",
+    "templates": {
+      "critique": "critique-agy",
+      "design": "design-agy",
+      "research": "research-agy",
+      "spike": "spike-agy"
+    }
   }
 }
