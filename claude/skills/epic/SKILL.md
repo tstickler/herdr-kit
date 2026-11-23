@@ -1,7 +1,7 @@
 ---
 name: epic
 description: Take a feature through spec, plan critique, task breakdown, Lead handoff, and acceptance checks.
-argument-hint: "<feature or ticket> [harness=claude|codex|claude,codex]"
+argument-hint: "<feature or ticket> [harness=claude|codex|antigravity|<comma list>]"
 disable-model-invocation: true
 ---
 

@@ -39,8 +39,10 @@ register_launcher() {
 
 . "$K/claude/setup.sh"
 . "$K/codex/setup.sh"
+. "$K/antigravity/setup.sh"
 setup_claude
 setup_codex
+setup_antigravity
 
 # Use the same names when typing into Herdr's interactive shells.
 link "$K/shell-launchers.sh" "$HOME/.config/herdr-kit/shell-launchers.sh"

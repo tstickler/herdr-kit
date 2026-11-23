@@ -66,6 +66,23 @@ through a proxy that prefixes model ids:
 CODEX_MODEL_PREFIX=global.openai.
 ```
 
+## Antigravity workers (optional)
+
+On a machine with Google's Antigravity CLI (`agy`) on PATH, `install.sh` adds the same eleven workers with an
+`-agy` suffix. Select them with `writer=antigravity`, `reader=antigravity`, or `harness=antigravity`.
+
+| Template | Model |
+|---|---|
+| `writer-low-agy` | Gemini 4 Neon, low |
+| `writer-agy`, `reader-agy`, `research-agy`, `spike-agy` | Gemini 4 Neon, medium |
+| `writer-high-agy`, `reader-high-agy`, `design-agy` | Gemini 4 Neon, high |
+| `writer-deep-agy`, `reader-deep-agy`, `critique-agy` | Gemini 4 Neon, xhigh |
+
+Each template runs `agy --model <slug> --dangerously-skip-permissions`. `agy` has no profiles, so the model
+lives in the template. Readers stay read-only through their instructions, not a sandbox. `agy` reads
+`AGENTS.md` and `GEMINI.md` but not `CLAUDE.md`; the templates tell workers to read it. The context-handoff
+hook does not run in `agy` yet. Install `agy` with Google's installer, then sign in once by running `agy`.
+
 ## Lead and Epic in either harness
 
 Run `./install.sh` for a first install or upgrade. It installs the shared commands and worker
@@ -184,6 +201,9 @@ codex/
   skills/             Lead, Epic, and helper entry points enabled by the launcher
   templates/          Codex workers → ~/.config/herdr-core/templates/
   setup.sh            Codex setup called by the top-level installer
+antigravity/
+  templates/          Antigravity workers → ~/.config/herdr-core/templates/
+  setup.sh            Antigravity setup called by the top-level installer
 shared/
   commands/           Critique, Design, Research, and Spike instructions → ~/.config/herdr-kit/commands/
   workflows/          Lead and Epic instructions and task levels

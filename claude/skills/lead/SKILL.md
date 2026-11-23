@@ -1,7 +1,7 @@
 ---
 name: lead
 description: Plan and delegate tasks in Herdr, select writers and reviewers, and present reviewed diffs for approval.
-argument-hint: "<task or ticket> [writer=claude|codex] [reader=claude|codex]"
+argument-hint: "<task or ticket> [writer=claude|codex|antigravity] [reader=claude|codex|antigravity]"
 disable-model-invocation: true
 ---
 
