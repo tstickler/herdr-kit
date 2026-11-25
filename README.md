@@ -178,8 +178,8 @@ repo and every worktree beside it, and coworkers never see it:
 Herdr's Changes panel shows the focused pane's folder, which is main for a lead session whose workers run in
 worktrees, and for a session that edits a worktree by path. The kit's `changes-worktrees` panel follows the work:
 
-- A button for each worktree the focused agent's workers run in, each one the session edited files in, and
-  each worktree of its repo active in the last day. The most recently edited one is shown by default.
+- A button for each worktree the focused agent's workers run in, and each one the session edited files in.
+  The most recently edited one is shown by default.
 - **Branch** shows everything the branch changed since its base, committed or not; **Uncommitted** shows only
   what isn't committed. A stacked branch (an open pull request onto another branch) is compared with that
   branch; switch to the default branch in the Commits header.
@@ -189,8 +189,7 @@ worktrees, and for a session that edits a worktree by path. The kit's `changes-w
 
 It needs `herdr-workdir.sh`, a Claude Code hook that records each session's folder and edited worktrees as
 labels on its terminal, and `gh` for pull request bases. `install.sh` installs both pieces. Then switch Herdr to
-the `main-worktrees` layout (ctrl-shift-l). Codex and Antigravity sessions don't report edited worktrees; the
-repo's recently active worktrees still show for them, without a default.
+the `main-worktrees` layout (ctrl-shift-l). Codex and Antigravity sessions don't report edited worktrees yet.
 
 ## Install
 

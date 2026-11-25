@@ -55,19 +55,12 @@ const bare = (address) => address?.includes("/") ? address.split("/").pop() : ad
 // set by herdr-kit's herdr-workdir hook), else its process's live folder.
 const workdir = (k) => k?.labels?.workdir || k?.cwd || null;
 
-// Each folder's repo's linked worktrees that were active in the last day (HEAD moved: a
-// checkout, commit, rebase), most recent first. This is what any harness gets: Codex and
-// Antigravity sessions report no edited worktrees. Loaded by the panel, kept 15 seconds.
-const repoLists = new Map();
-const recentWorktrees = (folder) => repoLists.get(folder)?.list ?? [];
-
-// The agent you're looking at, its own folder (`home`), and the other folders it works in:
-// worktrees it edited (Claude), its live sub-agents' (lead's workers), and recently active
-// worktrees of its repo.
+// The agent you're looking at, its own folder, and the other folders its live sub-agents
+// (lead's workers) work in.
 function checkouts() {
   const f = focused();
   const subject = f?.shown || f?.agent || f?.terminal || null;
-  if (!subject) return { subject, own: null, home: null, list: [] };
+  if (!subject) return { subject, own: null, list: [] };
   const all = terminals(), groups = new Map(), seen = new Set();
   const term = all.find(k => bare(k.address) === bare(subject));
   // A peeked or shown sub-agent has no pane: its terminal's folder is the one to use.
@@ -91,15 +84,7 @@ function checkouts() {
     }
   };
   visit(subject);
-  const pane = f?.pane ? panes().find(p => p.pane === f.pane) : null;
-  const home = own || term?.cwd || pane?.cwd || f?.cwd || null;
-  const inside = (path, root) => path === root || path.startsWith(root + "/");
-  for (const w of home ? recentWorktrees(home) : []) {
-    // Not the session's own checkout, and not one already shown for a worker or an edit.
-    if (inside(home, w.path) || [...groups.keys()].some(cwd => inside(cwd, w.path))) continue;
-    groups.set(w.path, { cwd: w.path, names: [], status: null, recent: true, active: w.active, branch: w.branch });
-  }
-  return { subject, own, home, list: [...groups.values()].filter(g => g.cwd !== (own || term?.cwd)) };
+  return { subject, own, list: [...groups.values()].filter(g => g.cwd !== (own || term?.cwd)) };
 }
 
 // The folder to show for the subject: a pick, else the worktree it last edited, else its own.
@@ -109,11 +94,6 @@ function chosenCheckout({ subject, list }) {
   if (list.some(g => g.cwd === chosen)) return chosen;
   return list.find(g => g.edited)?.cwd ?? null;
 }
-// "5 minutes", "3 hours": how long ago a unix time was.
-const ago = (unix) => {
-  const m = Math.max(1, Math.round((Date.now() / 1000 - unix) / 60));
-  return m < 60 ? `${m} minute${m === 1 ? "" : "s"}` : `${Math.round(m / 60)} hour${Math.round(m / 60) === 1 ? "" : "s"}`;
-};
 const basename = (path) => path.replace(/\/+$/, "").split("/").pop();
 
 function location() {
@@ -280,36 +260,7 @@ export default class Changes extends View {
     cx.timer.every(500, cx => this.refreshIfDue(cx));
   }
 
-  // Loads the recently active worktrees of the focused session's repo (see repoLists).
-  loadWorktrees(cx) {
-    const { home } = checkouts(), { on } = location();
-    if (!home) return;
-    const known = repoLists.get(home);
-    if (known && (known.pending || Date.now() - known.at < 15000)) return;
-    const next = { at: Date.now(), pending: true, list: known?.list ?? [] };
-    repoLists.set(home, next);
-    cx.spawn(async (cx) => {
-      try {
-        const git = (args, cwd) => exec("git", [...READ, ...args], { cwd, on });
-        const r = await git(["worktree", "list", "--porcelain"], home);
-        if (r.code !== 0) { next.list = []; return; }
-        // The first entry is the main checkout; bare and prunable ones have no files to show.
-        const trees = r.stdout.split(/\n\n+/).slice(1).map(b => b.split("\n"))
-          .filter(l => !l.some(x => x === "bare" || x.startsWith("prunable")))
-          .map(l => ({ path: l.find(x => x.startsWith("worktree "))?.slice(9), branch: l.find(x => x.startsWith("branch "))?.slice(7).replace(/^refs\/heads\//, "") ?? null }))
-          .filter(w => w.path);
-        // When HEAD last moved, from each worktree's own reflog ("HEAD@{<unix time>}").
-        const moved = await Promise.all(trees.map(w => git(["log", "-g", "-1", "--date=unix", "--format=%gd"], w.path).catch(() => null)));
-        const since = Date.now() / 1000 - 86400;
-        next.list = trees.map((w, i) => ({ ...w, active: Number(/\{(\d+)\}/.exec(moved[i]?.stdout ?? "")?.[1]) || 0 }))
-          .filter(w => w.active >= since).sort((a, b) => b.active - a.active).slice(0, 8);
-      } catch { next.list = []; }
-      finally { next.pending = false; next.at = Date.now(); cx.notify(); }
-    });
-  }
-
   refreshIfDue(cx) {
-    this.loadWorktrees(cx);
     const active = window()?.active !== false, context = this.context;
     const refocused = active && this.windowActive === false;
     this.windowActive = active;
@@ -634,9 +585,8 @@ export default class Changes extends View {
       .child(h_flex().id("changes-checkouts").size_full().px(8).gap(4).items_center().overflow_x_scrollbar()
         .child(pill("checkout-own", "This session", own || "The focused agent's own folder", !chosen, null, null))
         .children(list.map((g, i) => pill(`checkout-${i}`,
-          g.edited || g.recent ? basename(g.cwd) : g.names[0] + (g.names.length > 1 ? ` +${g.names.length - 1}` : ""),
-          [g.edited && "Edited by this session", g.recent && `Active ${ago(g.active)} ago${g.branch ? ` · ${g.branch}` : ""}`,
-            g.names.length && g.names.join(", "), g.cwd].filter(Boolean).join("\n"),
+          g.edited ? basename(g.cwd) : g.names[0] + (g.names.length > 1 ? ` +${g.names.length - 1}` : ""),
+          [g.edited && "Edited by this session", g.names.length && g.names.join(", "), g.cwd].filter(Boolean).join("\n"),
           chosen === g.cwd, g.status, g.cwd))));
   }
 
