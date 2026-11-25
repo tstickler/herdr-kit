@@ -60,13 +60,14 @@ const workdir = (k) => k?.labels?.workdir || k?.cwd || null;
 function checkouts() {
   const f = focused();
   const subject = f?.shown || f?.agent || f?.terminal || null;
-  if (!subject) return { subject, own: null, list: [] };
+  if (!subject) return { subject, own: null, latest: null, ownTree: null, list: [] };
   const all = terminals(), groups = new Map(), seen = new Set();
   const term = all.find(k => bare(k.address) === bare(subject));
   // A peeked or shown sub-agent has no pane: its terminal's folder is the one to use.
   const own = term?.labels?.workdir || ((f?.shown || f?.agent) ? term?.cwd : null) || null;
   // Worktrees the session edited (herdr-workdir hook's `worktrees` label), most recent first.
-  for (const cwd of (term?.labels?.worktrees ?? "").split(":").filter(Boolean)) {
+  const edited = (term?.labels?.worktrees ?? "").split(":").filter(Boolean);
+  for (const cwd of edited) {
     groups.set(cwd, { cwd, names: [], status: null, edited: true });
   }
   const visit = (address) => {
@@ -84,15 +85,20 @@ function checkouts() {
     }
   };
   visit(subject);
-  return { subject, own, list: [...groups.values()].filter(g => g.cwd !== (own || term?.cwd)) };
+  // The session's own folder is "This session", not a button, even when it's inside one of them.
+  const home = own || term?.cwd, inside = (path, root) => Boolean(path) && (path === root || path.startsWith(root + "/"));
+  // The worktree the session is in now, when it's one it edited (its button is named after it).
+  const ownTree = edited.find(w => inside(home, w)) ?? null;
+  return { subject, own, latest: edited[0] ?? null, ownTree, list: [...groups.values()].filter(g => !inside(home, g.cwd)) };
 }
 
-// The folder to show for the subject: a pick, else the worktree it last edited, else its own.
-function chosenCheckout({ subject, list }) {
+// The folder to show for the subject: a pick, else the worktree it last edited (its own folder
+// when that's where it is now), else its own.
+function chosenCheckout({ subject, latest, list }) {
   const chosen = choices.get(subject);
   if (chosen === "") return null;
   if (list.some(g => g.cwd === chosen)) return chosen;
-  return list.find(g => g.edited)?.cwd ?? null;
+  return list.some(g => g.cwd === latest) ? latest : null;
 }
 const basename = (path) => path.replace(/\/+$/, "").split("/").pop();
 
@@ -114,7 +120,7 @@ const key = () => JSON.stringify({ ...location(), branchView, pickedCommit, base
 // The last result for each folder and view, shown at once on switching back while a fresh
 // one loads. The most recent 20 are kept.
 const snapshots = new Map();
-const SNAPSHOT = ["root", "on", "hasHead", "base", "shownCommit", "fork", "baseName", "prBase", "defaultBase", "log", "branch", "tracking", "files", "limited"];
+const SNAPSHOT = ["root", "on", "hasHead", "base", "shownCommit", "fork", "baseName", "prBase", "defaultBase", "log", "branch", "tracking", "linked", "repoName", "files", "limited"];
 // Reads write nothing under .git (no index refresh or lock, no fsmonitor cookie):
 // the folder watch would see it, and every refresh would start the next one.
 const READ = ["--no-optional-locks", "-c", "core.fsmonitor=false", "-c", "diff.autoRefreshIndex=false"];
@@ -216,7 +222,11 @@ function prBase(root, on, branch) {
 
 // The branch's own commits since it left its base, and which are pushed.
 async function branchInfo(git, root, on) {
-  const [ref, current] = await Promise.all([git(["symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"]), git(["branch", "--show-current"])]);
+  const [ref, current, gitDir, common] = await Promise.all([git(["symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"]), git(["branch", "--show-current"]),
+    git(["rev-parse", "--absolute-git-dir"]), git(["rev-parse", "--path-format=absolute", "--git-common-dir"])]);
+  // A linked worktree has its own git dir inside the repo's common one; the main checkout doesn't.
+  const commonDir = common.stdout.trim(), linked = gitDir.code === 0 && common.code === 0 && gitDir.stdout.trim() !== commonDir;
+  const repoName = commonDir.replace(/\/\.git\/?$/, "").split("/").pop() || null;
   const defaultBase = ref.code === 0 ? ref.stdout.trim() : "origin/main", branch = current.stdout.trim();
   const pr = branch ? prBase(root, on, branch) : null;
   // A pull request onto the default branch is no different from it.
@@ -225,7 +235,7 @@ async function branchInfo(git, root, on) {
   const prBaseInfo = stacked ? { name: stacked, pr: pr.pr } : null;
   const baseName = baseMode === "pr" && stacked ? stacked : defaultBase;
   const pending = pr && !pr.done ? pr.promise : null;
-  const none = { fork: null, baseName, prBase: prBaseInfo, defaultBase, log: [], pending };
+  const none = { fork: null, baseName, prBase: prBaseInfo, defaultBase, log: [], pending, linked, repoName };
   const [mb, head, u] = await Promise.all([git(["merge-base", "HEAD", baseName]), git(["rev-parse", "HEAD"]),
     git(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"])]);
   if (mb.code !== 0 || head.code !== 0 || mb.stdout.trim() === head.stdout.trim()) return none;
@@ -349,7 +359,7 @@ export default class Changes extends View {
         if (status.code !== 0) throw new Error(status.stderr);
         if (request.urgent && request.after > started) context.catchUp = true;
         const statusEntries = status.stdout.split("\0").filter(Boolean);
-        const { fork, baseName, prBase: stackedOn, defaultBase, log, pending, branch, tracking } = await branching;
+        const { fork, baseName, prBase: stackedOn, defaultBase, log, pending, branch, tracking, linked, repoName } = await branching;
         // When the pull request lookup answers, look again with its base.
         pending?.then(() => { if (this.context === context) context.catchUp = true; });
         // Branch view: everything the branch changed, committed or not, so a session that
@@ -398,7 +408,7 @@ export default class Changes extends View {
           if (text !== null && !text.includes("\0")) f.add = countLines(text);
         }));
         if (!this.current(context)) return;
-        this.root = root; this.on = on; this.hasHead = hasHead; this.base = base; this.shownCommit = commit; this.fork = fork; this.baseName = baseName; this.prBase = stackedOn; this.defaultBase = defaultBase; this.log = log; this.branch = branch; this.tracking = tracking; this.files = files; this.limited = entries.length > 1000; this.error = null;
+        this.root = root; this.on = on; this.hasHead = hasHead; this.base = base; this.shownCommit = commit; this.fork = fork; this.baseName = baseName; this.prBase = stackedOn; this.defaultBase = defaultBase; this.log = log; this.branch = branch; this.tracking = tracking; this.linked = linked; this.repoName = repoName; this.files = files; this.limited = entries.length > 1000; this.error = null;
         snapshots.delete(context.key);
         snapshots.set(context.key, Object.fromEntries(SNAPSHOT.map(k => [k, this[k]])));
         if (snapshots.size > 20) snapshots.delete(snapshots.keys().next().value);
@@ -579,7 +589,7 @@ export default class Changes extends View {
 
   // One pill for the agent's own folder, then one per folder its workers run in.
   picker(found, t) {
-    const { subject, own, list } = found, chosen = chosenCheckout(found);
+    const { subject, own, ownTree, list } = found, chosen = chosenCheckout(found);
     const pill = (id, label, tip, on, status, cwd) => h_flex().id(id).h(24).px(8).gap(5).flex_none().items_center().rounded(6)
       .text_size(11.5).bg(on ? t.selected : t.background).text_color(on ? t.foreground : t.muted).border_1().border_color(on ? t.border : t.background)
       .cursor_pointer().hover((s) => s.bg(t.hover)).tooltip(tip)
@@ -589,7 +599,8 @@ export default class Changes extends View {
     // overflow_x_scrollbar() wraps the row, so the fixed height has to sit on an outer box.
     return div().h(37).flex_none().border_b(1).border_color(t.border)
       .child(h_flex().id("changes-checkouts").size_full().px(8).gap(4).items_center().overflow_x_scrollbar()
-        .child(pill("checkout-own", "This session", own || "The focused agent's own folder", !chosen, null, null))
+        .child(pill("checkout-own", ownTree ? basename(ownTree) : "This session",
+          `Where this session is working now\n${own || "The focused agent's own folder"}`, !chosen, null, null))
         .children(list.map((g, i) => pill(`checkout-${i}`,
           g.edited ? basename(g.cwd) : g.names[0] + (g.names.length > 1 ? ` +${g.names.length - 1}` : ""),
           [g.edited && "Edited by this session", g.names.length && g.names.join(", "), g.cwd].filter(Boolean).join("\n"),
@@ -664,11 +675,16 @@ export default class Changes extends View {
       })
       .child(h_flex().h(42).flex_none().px(14).gap(8).items_center().border_b(1).border_color(t.border)
         .child(div().font_semibold().child("Changes"))
+        // Which kind of checkout is shown: a linked worktree, or the repo's main checkout.
+        .children(this.root ? [div().id("checkout-kind").px(5).py(1).rounded(4).border_1().text_size(10)
+          .border_color(this.linked ? t.accent : t.border).text_color(this.linked ? t.accent : t.dim)
+          .tooltip(`${this.linked ? "A worktree of" : "The main checkout of"} ${this.repoName ?? "this repo"}\n${this.root}`)
+          .child(this.linked ? "worktree" : "root")] : [])
         .when(Boolean(this.fork) && !this.shownCommit, (e) => e.child(this.scopeToggle(t)))
         .children(this.shownCommit ? [this.commitChip(t)] : [])
         .child(div().px(5).py(1).rounded(4).border_1().border_color(t.border).text_size(10).text_color(t.muted).child(`${this.files.length} files`))
         .child(div().flex_1()).child(div().text_size(11).text_color(t.ansi2).child(`+${add}`)).child(div().text_size(11).text_color(t.ansi1).child(`−${del}`)))
-      .when(worktrees.list.length > 0, (e) => e.child(this.picker(worktrees, t)))
+      .when(worktrees.list.length > 0 || Boolean(worktrees.ownTree), (e) => e.child(this.picker(worktrees, t)))
       // overflow_y_scrollbar() wraps the list, so its flex sizing never reached the panel's layout.
       // Nothing selected: no diff area, and the list takes the whole panel.
       .child(div().flex_1().min_h(44).when(Boolean(this.open), (e) => e.max_h(tree.length * 26 + 12).border_b(1).border_color(t.border)).relative()
