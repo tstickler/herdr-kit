@@ -39,6 +39,16 @@ setup_claude() (
     mv "$s.tmp" "$s"
     echo "ok: handoff hook added to $s (backup: $s.pre-herdr-handoff)"
   fi
+  link "$K/claude/hooks/herdr-workdir.sh" "$HOME/.claude/hooks/herdr-workdir.sh"
+  if grep -q herdr-workdir "$s"; then
+    echo "ok: workdir hook already in $s"
+  else
+    cp "$s" "$s.pre-herdr-workdir"
+    jq '.hooks.PostToolUse += [{hooks:[{type:"command",command:"~/.claude/hooks/herdr-workdir.sh"}]}]
+      | .hooks.SessionStart += [{hooks:[{type:"command",command:"~/.claude/hooks/herdr-workdir.sh"}]}]' "$s.pre-herdr-workdir" > "$s.tmp"
+    mv "$s.tmp" "$s"
+    echo "ok: workdir hook added to $s (backup: $s.pre-herdr-workdir)"
+  fi
 
   register_launcher claude
 )

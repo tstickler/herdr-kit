@@ -173,6 +173,24 @@ repo and every worktree beside it, and coworkers never see it:
   <monorepo>-<task>/<app>/           /lead's worktrees find them too
 ```
 
+## Changes panel for worktrees
+
+Herdr's Changes panel shows the focused pane's folder, which is main for a lead session whose workers run in
+worktrees, and for a session that edits a worktree by path. The kit's `changes-worktrees` panel follows the work:
+
+- A button for each worktree the focused agent's workers run in, and each one the session edited files in.
+  The most recently edited one is shown by default.
+- **Branch** shows everything the branch changed since its base, committed or not; **Uncommitted** shows only
+  what isn't committed. A stacked branch (an open pull request onto another branch) is compared with that
+  branch; switch to the default branch in the Commits header.
+- Changed files as a folder tree, the branch's commits with pushed and local dots, a commit's own change on
+  click, and a Push button when commits are local. It never force-pushes, and offers no push on `claude/*`.
+- Click a diff line and shift-click another to select lines; Cmd+C copies them.
+
+It needs `herdr-workdir.sh`, a Claude Code hook that records each session's folder and edited worktrees as
+labels on its terminal, and `gh` for pull request bases. `install.sh` installs both pieces. Then switch Herdr to
+the `main-worktrees` layout (ctrl-shift-l). Codex and Antigravity sessions don't report edited worktrees yet.
+
 ## Install
 
 1. Install Herdr and `jq`, and make sure `~/.local/bin` is on your PATH.
@@ -194,7 +212,7 @@ claude/
   skills/             Lead and Epic entry points loaded by the launcher
   commands/           Helper slash commands loaded by the launcher
   templates/          Claude workers → ~/.config/herdr-core/templates/
-  hooks/              Claude session tab naming
+  hooks/              Claude session tab naming and working-folder labels
   setup.sh            Claude setup called by the top-level installer
 codex/
   bin/herdr-codex     Codex session launcher → ~/.local/bin/
@@ -204,6 +222,10 @@ codex/
 antigravity/
   templates/          Antigravity workers → ~/.config/herdr-core/templates/
   setup.sh            Antigravity setup called by the top-level installer
+herdr/
+  mods/               The worktree-aware Changes panel → ~/.config/herdr-app/mods/ (linked)
+  layouts/            main-worktrees layout → ~/.config/herdr-app/layouts/ (copied once)
+  setup.sh            Herdr app setup called by the top-level installer
 shared/
   commands/           Critique, Design, Research, and Spike instructions → ~/.config/herdr-kit/commands/
   workflows/          Lead and Epic instructions and task levels
