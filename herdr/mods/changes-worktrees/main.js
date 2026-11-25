@@ -624,7 +624,11 @@ export default class Changes extends View {
       .child(div().id("diff-path").flex_1().min_w(0).truncate().cursor_pointer().hover((s) => s.text_color(t.foreground)).tooltip("Copy path")
         .on_click((_e, cx) => { cx.write_to_clipboard(this.open); this.copied = "Copied path"; cx.notify(); }).child(this.open))
       .children(this.copied ? [div().flex_none().text_color(t.ansi2).child(this.copied)]
-        : this.sel ? [div().flex_none().text_color(t.dim).child("⇧-click to extend · ⌘C to copy")] : []);
+        : this.sel ? [div().flex_none().text_color(t.dim).child("⇧-click to extend · ⌘C to copy")] : [])
+      // Close: back to the file list alone (pick() on the open file unselects it).
+      .child(div().id("diff-close").size(20).flex_none().flex().items_center().justify_center().rounded(5).cursor_pointer()
+        .hover((s) => s.bg(t.hover)).tooltip("Close").on_click((_e, cx) => this.pick(this.open, cx))
+        .child(svg("mods/changes-worktrees/close.svg").size(12).text_color(t.muted)));
   }
 
   diffRow({ kind, number, text }, t, size, i) {
