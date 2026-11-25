@@ -60,13 +60,14 @@ const workdir = (k) => k?.labels?.workdir || k?.cwd || null;
 function checkouts() {
   const f = focused();
   const subject = f?.shown || f?.agent || f?.terminal || null;
-  if (!subject) return { subject, own: null, list: [] };
+  if (!subject) return { subject, own: null, latest: null, list: [] };
   const all = terminals(), groups = new Map(), seen = new Set();
   const term = all.find(k => bare(k.address) === bare(subject));
   // A peeked or shown sub-agent has no pane: its terminal's folder is the one to use.
   const own = term?.labels?.workdir || ((f?.shown || f?.agent) ? term?.cwd : null) || null;
   // Worktrees the session edited (herdr-workdir hook's `worktrees` label), most recent first.
-  for (const cwd of (term?.labels?.worktrees ?? "").split(":").filter(Boolean)) {
+  const edited = (term?.labels?.worktrees ?? "").split(":").filter(Boolean);
+  for (const cwd of edited) {
     groups.set(cwd, { cwd, names: [], status: null, edited: true });
   }
   const visit = (address) => {
@@ -84,15 +85,18 @@ function checkouts() {
     }
   };
   visit(subject);
-  return { subject, own, list: [...groups.values()].filter(g => g.cwd !== (own || term?.cwd)) };
+  // The session's own folder is "This session", not a button, even when it's inside one of them.
+  const home = own || term?.cwd, inside = (path, root) => Boolean(path) && (path === root || path.startsWith(root + "/"));
+  return { subject, own, latest: edited[0] ?? null, list: [...groups.values()].filter(g => !inside(home, g.cwd)) };
 }
 
-// The folder to show for the subject: a pick, else the worktree it last edited, else its own.
-function chosenCheckout({ subject, list }) {
+// The folder to show for the subject: a pick, else the worktree it last edited (its own folder
+// when that's where it is now), else its own.
+function chosenCheckout({ subject, latest, list }) {
   const chosen = choices.get(subject);
   if (chosen === "") return null;
   if (list.some(g => g.cwd === chosen)) return chosen;
-  return list.find(g => g.edited)?.cwd ?? null;
+  return list.some(g => g.cwd === latest) ? latest : null;
 }
 const basename = (path) => path.replace(/\/+$/, "").split("/").pop();
 
