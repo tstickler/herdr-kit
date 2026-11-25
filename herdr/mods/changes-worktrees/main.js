@@ -391,6 +391,12 @@ export default class Changes extends View {
           const stat = stats[path] ?? { add: 0, del: 0 };
           files.push({ path, status: s, fresh, ...stat });
         }
+        // Untracked files aren't in numstat: count their lines by reading them.
+        // ponytail: rereads up to 200 files every refresh; cache by mtime if that gets slow.
+        await Promise.all(files.filter(f => f.fresh).slice(0, 200).map(async (f) => {
+          const text = await readTextFile(`${root}/${f.path}`, { on }).catch(() => null);
+          if (text !== null && !text.includes("\0")) f.add = countLines(text);
+        }));
         if (!this.current(context)) return;
         this.root = root; this.on = on; this.hasHead = hasHead; this.base = base; this.shownCommit = commit; this.fork = fork; this.baseName = baseName; this.prBase = stackedOn; this.defaultBase = defaultBase; this.log = log; this.branch = branch; this.tracking = tracking; this.files = files; this.limited = entries.length > 1000; this.error = null;
         snapshots.delete(context.key);
