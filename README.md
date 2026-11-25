@@ -200,9 +200,9 @@ the `main-worktrees` layout (ctrl-shift-l). Codex and Antigravity sessions don't
 5. Check from your app folder: `herdr-notes lead | head -1` should name your notes file.
 6. Open a Herdr tab in the repo, start Claude, then run `/lead`.
 
-To update, run `git pull` in `herdr-kit`. Rerun `./install.sh` once to migrate the old global links,
-install the launch integration and worker resolver, and update the Codex profiles. Open a new Herdr
-terminal to pick up the shell integration.
+To update, run `git pull` in `herdr-kit`, then `./install.sh`. It copies in the latest Changes panel (Herdr
+doesn't reload a linked mod), migrates old global links, installs the launch integration and worker
+resolver, and updates the Codex profiles. Open a new Herdr terminal to pick up the shell integration.
 
 ## What's in here
 
@@ -223,7 +223,7 @@ antigravity/
   templates/          Antigravity workers → ~/.config/herdr-core/templates/
   setup.sh            Antigravity setup called by the top-level installer
 herdr/
-  mods/               The worktree-aware Changes panel → ~/.config/herdr-app/mods/ (linked)
+  mods/               The worktree-aware Changes panel → ~/.config/herdr-app/mods/ (copied)
   layouts/            main-worktrees layout → ~/.config/herdr-app/layouts/ (copied once)
   setup.sh            Herdr app setup called by the top-level installer
 shared/

@@ -120,7 +120,7 @@ const key = () => JSON.stringify({ ...location(), branchView, pickedCommit, base
 // The last result for each folder and view, shown at once on switching back while a fresh
 // one loads. The most recent 20 are kept.
 const snapshots = new Map();
-const SNAPSHOT = ["root", "on", "hasHead", "base", "shownCommit", "fork", "baseName", "prBase", "defaultBase", "log", "branch", "tracking", "files", "limited"];
+const SNAPSHOT = ["root", "on", "hasHead", "base", "shownCommit", "fork", "baseName", "prBase", "defaultBase", "log", "branch", "tracking", "linked", "repoName", "files", "limited"];
 // Reads write nothing under .git (no index refresh or lock, no fsmonitor cookie):
 // the folder watch would see it, and every refresh would start the next one.
 const READ = ["--no-optional-locks", "-c", "core.fsmonitor=false", "-c", "diff.autoRefreshIndex=false"];
@@ -222,7 +222,11 @@ function prBase(root, on, branch) {
 
 // The branch's own commits since it left its base, and which are pushed.
 async function branchInfo(git, root, on) {
-  const [ref, current] = await Promise.all([git(["symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"]), git(["branch", "--show-current"])]);
+  const [ref, current, gitDir, common] = await Promise.all([git(["symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"]), git(["branch", "--show-current"]),
+    git(["rev-parse", "--absolute-git-dir"]), git(["rev-parse", "--path-format=absolute", "--git-common-dir"])]);
+  // A linked worktree has its own git dir inside the repo's common one; the main checkout doesn't.
+  const commonDir = common.stdout.trim(), linked = gitDir.code === 0 && common.code === 0 && gitDir.stdout.trim() !== commonDir;
+  const repoName = commonDir.replace(/\/\.git\/?$/, "").split("/").pop() || null;
   const defaultBase = ref.code === 0 ? ref.stdout.trim() : "origin/main", branch = current.stdout.trim();
   const pr = branch ? prBase(root, on, branch) : null;
   // A pull request onto the default branch is no different from it.
@@ -231,7 +235,7 @@ async function branchInfo(git, root, on) {
   const prBaseInfo = stacked ? { name: stacked, pr: pr.pr } : null;
   const baseName = baseMode === "pr" && stacked ? stacked : defaultBase;
   const pending = pr && !pr.done ? pr.promise : null;
-  const none = { fork: null, baseName, prBase: prBaseInfo, defaultBase, log: [], pending };
+  const none = { fork: null, baseName, prBase: prBaseInfo, defaultBase, log: [], pending, linked, repoName };
   const [mb, head, u] = await Promise.all([git(["merge-base", "HEAD", baseName]), git(["rev-parse", "HEAD"]),
     git(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"])]);
   if (mb.code !== 0 || head.code !== 0 || mb.stdout.trim() === head.stdout.trim()) return none;
@@ -355,7 +359,7 @@ export default class Changes extends View {
         if (status.code !== 0) throw new Error(status.stderr);
         if (request.urgent && request.after > started) context.catchUp = true;
         const statusEntries = status.stdout.split("\0").filter(Boolean);
-        const { fork, baseName, prBase: stackedOn, defaultBase, log, pending, branch, tracking } = await branching;
+        const { fork, baseName, prBase: stackedOn, defaultBase, log, pending, branch, tracking, linked, repoName } = await branching;
         // When the pull request lookup answers, look again with its base.
         pending?.then(() => { if (this.context === context) context.catchUp = true; });
         // Branch view: everything the branch changed, committed or not, so a session that
@@ -398,7 +402,7 @@ export default class Changes extends View {
           files.push({ path, status: s, fresh, ...stat });
         }
         if (!this.current(context)) return;
-        this.root = root; this.on = on; this.hasHead = hasHead; this.base = base; this.shownCommit = commit; this.fork = fork; this.baseName = baseName; this.prBase = stackedOn; this.defaultBase = defaultBase; this.log = log; this.branch = branch; this.tracking = tracking; this.files = files; this.limited = entries.length > 1000; this.error = null;
+        this.root = root; this.on = on; this.hasHead = hasHead; this.base = base; this.shownCommit = commit; this.fork = fork; this.baseName = baseName; this.prBase = stackedOn; this.defaultBase = defaultBase; this.log = log; this.branch = branch; this.tracking = tracking; this.linked = linked; this.repoName = repoName; this.files = files; this.limited = entries.length > 1000; this.error = null;
         snapshots.delete(context.key);
         snapshots.set(context.key, Object.fromEntries(SNAPSHOT.map(k => [k, this[k]])));
         if (snapshots.size > 20) snapshots.delete(snapshots.keys().next().value);
@@ -665,6 +669,11 @@ export default class Changes extends View {
       })
       .child(h_flex().h(42).flex_none().px(14).gap(8).items_center().border_b(1).border_color(t.border)
         .child(div().font_semibold().child("Changes"))
+        // Which kind of checkout is shown: a linked worktree, or the repo's main checkout.
+        .children(this.root ? [div().id("checkout-kind").px(5).py(1).rounded(4).border_1().text_size(10)
+          .border_color(this.linked ? t.accent : t.border).text_color(this.linked ? t.accent : t.dim)
+          .tooltip(`${this.linked ? "A worktree of" : "The main checkout of"} ${this.repoName ?? "this repo"}\n${this.root}`)
+          .child(this.linked ? "worktree" : "root")] : [])
         .when(Boolean(this.fork) && !this.shownCommit, (e) => e.child(this.scopeToggle(t)))
         .children(this.shownCommit ? [this.commitChip(t)] : [])
         .child(div().px(5).py(1).rounded(4).border_1().border_color(t.border).text_size(10).text_color(t.muted).child(`${this.files.length} files`))
