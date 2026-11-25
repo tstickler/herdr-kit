@@ -49,15 +49,6 @@ setup_claude() (
     mv "$s.tmp" "$s"
     echo "ok: workdir hook added to $s (backup: $s.pre-herdr-workdir)"
   fi
-  link "$K/claude/hooks/block-worktree-branch-push.sh" "$HOME/.claude/hooks/block-worktree-branch-push.sh"
-  if grep -q block-worktree-branch-push "$s"; then
-    echo "ok: push guard already in $s"
-  else
-    cp "$s" "$s.pre-herdr-push-guard"
-    jq '.hooks.PreToolUse += [{matcher:"Bash",hooks:[{type:"command",command:"bash ~/.claude/hooks/block-worktree-branch-push.sh"}]}]' "$s.pre-herdr-push-guard" > "$s.tmp"
-    mv "$s.tmp" "$s"
-    echo "ok: push guard added to $s (backup: $s.pre-herdr-push-guard)"
-  fi
 
   register_launcher claude
 )

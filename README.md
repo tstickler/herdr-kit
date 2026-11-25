@@ -212,7 +212,7 @@ claude/
   skills/             Lead and Epic entry points loaded by the launcher
   commands/           Helper slash commands loaded by the launcher
   templates/          Claude workers → ~/.config/herdr-core/templates/
-  hooks/              Claude session tab naming, working-folder labels, claude/* push guard
+  hooks/              Claude session tab naming and working-folder labels
   setup.sh            Claude setup called by the top-level installer
 codex/
   bin/herdr-codex     Codex session launcher → ~/.local/bin/
