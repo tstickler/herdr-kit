@@ -60,7 +60,7 @@ const workdir = (k) => k?.labels?.workdir || k?.cwd || null;
 function checkouts() {
   const f = focused();
   const subject = f?.shown || f?.agent || f?.terminal || null;
-  if (!subject) return { subject, own: null, latest: null, list: [] };
+  if (!subject) return { subject, own: null, latest: null, ownTree: null, list: [] };
   const all = terminals(), groups = new Map(), seen = new Set();
   const term = all.find(k => bare(k.address) === bare(subject));
   // A peeked or shown sub-agent has no pane: its terminal's folder is the one to use.
@@ -87,7 +87,9 @@ function checkouts() {
   visit(subject);
   // The session's own folder is "This session", not a button, even when it's inside one of them.
   const home = own || term?.cwd, inside = (path, root) => Boolean(path) && (path === root || path.startsWith(root + "/"));
-  return { subject, own, latest: edited[0] ?? null, list: [...groups.values()].filter(g => !inside(home, g.cwd)) };
+  // The worktree the session is in now, when it's one it edited (its button is named after it).
+  const ownTree = edited.find(w => inside(home, w)) ?? null;
+  return { subject, own, latest: edited[0] ?? null, ownTree, list: [...groups.values()].filter(g => !inside(home, g.cwd)) };
 }
 
 // The folder to show for the subject: a pick, else the worktree it last edited (its own folder
@@ -583,7 +585,7 @@ export default class Changes extends View {
 
   // One pill for the agent's own folder, then one per folder its workers run in.
   picker(found, t) {
-    const { subject, own, list } = found, chosen = chosenCheckout(found);
+    const { subject, own, ownTree, list } = found, chosen = chosenCheckout(found);
     const pill = (id, label, tip, on, status, cwd) => h_flex().id(id).h(24).px(8).gap(5).flex_none().items_center().rounded(6)
       .text_size(11.5).bg(on ? t.selected : t.background).text_color(on ? t.foreground : t.muted).border_1().border_color(on ? t.border : t.background)
       .cursor_pointer().hover((s) => s.bg(t.hover)).tooltip(tip)
@@ -593,7 +595,8 @@ export default class Changes extends View {
     // overflow_x_scrollbar() wraps the row, so the fixed height has to sit on an outer box.
     return div().h(37).flex_none().border_b(1).border_color(t.border)
       .child(h_flex().id("changes-checkouts").size_full().px(8).gap(4).items_center().overflow_x_scrollbar()
-        .child(pill("checkout-own", "This session", own || "The focused agent's own folder", !chosen, null, null))
+        .child(pill("checkout-own", ownTree ? basename(ownTree) : "This session",
+          `Where this session is working now\n${own || "The focused agent's own folder"}`, !chosen, null, null))
         .children(list.map((g, i) => pill(`checkout-${i}`,
           g.edited ? basename(g.cwd) : g.names[0] + (g.names.length > 1 ? ` +${g.names.length - 1}` : ""),
           [g.edited && "Edited by this session", g.names.length && g.names.join(", "), g.cwd].filter(Boolean).join("\n"),
@@ -672,7 +675,7 @@ export default class Changes extends View {
         .children(this.shownCommit ? [this.commitChip(t)] : [])
         .child(div().px(5).py(1).rounded(4).border_1().border_color(t.border).text_size(10).text_color(t.muted).child(`${this.files.length} files`))
         .child(div().flex_1()).child(div().text_size(11).text_color(t.ansi2).child(`+${add}`)).child(div().text_size(11).text_color(t.ansi1).child(`−${del}`)))
-      .when(worktrees.list.length > 0, (e) => e.child(this.picker(worktrees, t)))
+      .when(worktrees.list.length > 0 || Boolean(worktrees.ownTree), (e) => e.child(this.picker(worktrees, t)))
       // overflow_y_scrollbar() wraps the list, so its flex sizing never reached the panel's layout.
       // Nothing selected: no diff area, and the list takes the whole panel.
       .child(div().flex_1().min_h(44).when(Boolean(this.open), (e) => e.max_h(tree.length * 26 + 12).border_b(1).border_color(t.border)).relative()
