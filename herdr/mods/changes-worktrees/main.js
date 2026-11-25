@@ -643,7 +643,8 @@ export default class Changes extends View {
   render(cx) {
     if (key() !== this.context?.key) this.refresh(cx);
     else this.refreshIfDue(cx);
-    const t = theme(), size = settings().font_size, add = this.files.reduce((n, f) => n + f.add, 0), del = this.files.reduce((n, f) => n + f.del, 0);
+    // The diff reads smaller than the terminals: 85% of their font size.
+    const t = theme(), size = Math.max(10, Math.round(settings().font_size * 0.85)), add = this.files.reduce((n, f) => n + f.add, 0), del = this.files.reduce((n, f) => n + f.del, 0);
     const enabled = Boolean(this.message.trim() && this.root && !this.busy && !this.loading);
     const worktrees = checkouts(), tree = treeRows(fileTree(this.files), this.collapsed);
     return v_flex().id("changes").size_full().min_h(0).rounded(10).overflow_hidden().bg(t.background).border_1().border_color(t.border).text_color(t.foreground).text_size(13).track_focus(this.handle)
